@@ -1,0 +1,60 @@
+
+# Node modules
+node_modules/
+**/node_modules/
+
+# PNPM store
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+**/dist/
+**/build/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+**/.env
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# MacOS
+.DS_Store
+
+# VSCode
+.vscode/
+.history/
+
+# TurboRepo cache
+.turbo/
+.cache/
+
+# Next.js / Web
+.next/
+out/
+
+# Expo / React Native
+.expo/
+.expo-shared/
+*.expo
+
+# Coverage
+coverage/
+**/coverage/
+
+# Typescript
+*.tsbuildinfo
+
+# Misc
+.idea/
+*.swp
+*.swo
+*.sublime-workspace
+*.sublime-project
