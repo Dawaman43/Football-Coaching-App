@@ -85,7 +85,10 @@ export default function LoginScreen() {
           </Pressable>
         </View>
 
-        <Pressable className="bg-accent h-14 rounded-xl items-center justify-center mb-8">
+        <Pressable
+          onPress={() => router.replace("/(tabs)")}
+          className="bg-accent h-14 rounded-xl items-center justify-center mb-8"
+        >
           <Text className="text-white font-bold text-lg font-outfit">
             Sign In
           </Text>
