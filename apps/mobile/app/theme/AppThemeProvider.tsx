@@ -1,7 +1,6 @@
 import { Colors } from "@/constants/theme";
 import { vars } from "nativewind";
 import React, { createContext, useCallback, useContext, useState } from "react";
-import { Platform, StatusBar, View } from "react-native";
 
 type ColorSchemeName = "light" | "dark";
 
@@ -69,31 +68,11 @@ export default function AppThemeProvider({
   const isDark = colorScheme === "dark";
   const themeVars = isDark ? darkVars : lightVars;
 
-  React.useEffect(() => {
-    if (Platform.OS === "web") {
-      const root = document.documentElement;
-      if (isDark) {
-        root.classList.add("dark");
-      } else {
-        root.classList.remove("dark");
-      }
-    }
-  }, [isDark]);
-
   return (
     <AppThemeContext.Provider
       value={{ colorScheme, colors, toggleColorScheme, isDark }}
     >
-      <View
-        style={[{ flex: 1, backgroundColor: colors.background }, themeVars]}
-        className={isDark ? "dark" : ""}
-      >
-        <StatusBar
-          barStyle={isDark ? "light-content" : "dark-content"}
-          backgroundColor={colors.background}
-        />
-        {children}
-      </View>
+      {children}
     </AppThemeContext.Provider>
   );
 }

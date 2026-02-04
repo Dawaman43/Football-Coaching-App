@@ -4,10 +4,11 @@ import React from "react";
 import { Platform } from "react-native";
 
 import { useAppTheme } from "@/app/theme/AppThemeProvider";
-import { HapticTab } from "@/components/haptic-tab";
+import { useRole } from "@/context/RoleContext";
 
 export default function TabLayout() {
   const { colors } = useAppTheme();
+  const { role } = useRole();
 
   return (
     <Tabs
@@ -27,7 +28,6 @@ export default function TabLayout() {
           paddingBottom: Platform.OS === "ios" ? 0 : 8,
         },
         headerShown: false,
-        tabBarButton: HapticTab,
       }}
     >
       <Tabs.Screen
@@ -57,6 +57,18 @@ export default function TabLayout() {
           ),
         }}
       />
+
+      <Tabs.Screen
+        name="parent-platform"
+        options={{
+          title: "Parent Platform",
+          href: role === "Guardian" ? undefined : null,
+          tabBarIcon: ({ color }) => (
+            <Feather name="book" size={24} color={color} />
+          ),
+        }}
+      />
+
       <Tabs.Screen
         name="schedule"
         options={{
