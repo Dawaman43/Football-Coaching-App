@@ -7,6 +7,7 @@ interface ActionButtonProps {
   label: string;
   color: string;
   iconColor: string;
+  onPress?: () => void;
 }
 
 export function ActionButton({
@@ -14,9 +15,10 @@ export function ActionButton({
   label,
   color,
   iconColor,
+  onPress,
 }: ActionButtonProps) {
   return (
-    <TouchableOpacity className="flex-1 items-center gap-2">
+    <TouchableOpacity onPress={onPress} className="flex-1 items-center gap-2">
       <View
         className={`w-14 h-14 ${color} rounded-2xl items-center justify-center`}
       >

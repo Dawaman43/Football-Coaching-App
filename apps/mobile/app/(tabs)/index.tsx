@@ -1,17 +1,26 @@
 import { AthleteDashboard } from "@/components/dashboard/AthleteDashboard";
 import { GuardianDashboard } from "@/components/dashboard/GuardianDashboard";
+import { ThemedScrollView } from "@/components/ThemedScrollView";
 import { useRole } from "@/context/RoleContext";
 import { Feather } from "@expo/vector-icons";
 import React from "react";
-import { ScrollView, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HomeScreen() {
   const { role } = useRole();
 
+  const handleRefresh = async () => {
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    console.log("Refreshed Home Screen");
+  };
+
   return (
-    <SafeAreaView className="flex-1 bg-app">
-      <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
+    <SafeAreaView className="flex-1 bg-app" edges={["top"]}>
+      <ThemedScrollView
+        onRefresh={handleRefresh}
+        contentContainerStyle={{ paddingBottom: 40 }}
+      >
         <View className="px-6 pt-6 pb-6 bg-input rounded-b-[32px] shadow-sm mb-6">
           <View className="flex-row justify-between items-center">
             <View>
@@ -38,7 +47,7 @@ export default function HomeScreen() {
         <View className="px-6 gap-6">
           {role === "Guardian" ? <GuardianDashboard /> : <AthleteDashboard />}
         </View>
-      </ScrollView>
+      </ThemedScrollView>
     </SafeAreaView>
   );
 }

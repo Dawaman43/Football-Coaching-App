@@ -1,3 +1,4 @@
+import { RefreshProvider } from "@/context/RefreshContext";
 import { RoleProvider } from "@/context/RoleContext";
 import { DarkTheme, DefaultTheme } from "@react-navigation/native";
 import { Slot, SplashScreen } from "expo-router";
@@ -18,6 +19,21 @@ if (Platform.OS === "web") {
   require("./fonts.css");
 }
 
+function GlobalRefreshLayout({ children }: { children: React.ReactNode }) {
+  const { colorScheme } = useColorScheme();
+  const theme = colorScheme === "dark" ? DarkTheme : DefaultTheme;
+
+  return (
+    <View
+      key={colorScheme}
+      className={colorScheme === "dark" ? "dark" : ""}
+      style={{ flex: 1, backgroundColor: theme.colors.background }}
+    >
+      {children}
+    </View>
+  );
+}
+
 export default function RootLayout() {
   const { colorScheme } = useColorScheme();
   const fontsLoaded = useLoadFonts();
@@ -27,7 +43,6 @@ export default function RootLayout() {
   useEffect(() => {
     async function prepare() {
       try {
-        // Wait for fonts to load
         if (fontsLoaded || Platform.OS === "web") {
           setAppIsReady(true);
         }
@@ -53,14 +68,12 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <RoleProvider>
           <AppThemeProvider>
-            <View
-              key={colorScheme}
-              className={colorScheme === "dark" ? "dark" : ""}
-              style={{ flex: 1, backgroundColor: theme.colors.background }}
-            >
-              <Slot />
-              <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
-            </View>
+            <RefreshProvider>
+              <GlobalRefreshLayout>
+                <Slot />
+                <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
+              </GlobalRefreshLayout>
+            </RefreshProvider>
           </AppThemeProvider>
         </RoleProvider>
       </SafeAreaProvider>
