@@ -39,7 +39,7 @@ export default function ProfileSettingsScreen() {
     <SafeAreaView className="flex-1 bg-app" edges={["top"]}>
       <View className="px-6 py-4 bg-input border-b border-app flex-row items-center justify-between">
         <TouchableOpacity
-          onPress={() => router.back()}
+          onPress={() => router.navigate("/(tabs)/more")}
           className="w-10 h-10 items-center justify-center bg-secondary rounded-full"
         >
           <Feather name="arrow-left" size={20} className="text-app" />
@@ -131,7 +131,7 @@ export default function ProfileSettingsScreen() {
           icon="check"
           color="bg-accent"
           iconColor="text-white"
-          onPress={() => router.back()}
+          onPress={() => router.navigate("/(tabs)/more")}
         />
       </ThemedScrollView>
       <PinModal

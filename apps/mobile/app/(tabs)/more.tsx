@@ -16,7 +16,6 @@ export default function MoreScreen() {
   const { role } = useRole();
   const router = useRouter();
   const { isLoading } = useRefreshContext();
-
   const handleRefresh = async () => {
     await new Promise((resolve) => setTimeout(resolve, 2000));
     console.log("Refreshed More Screen");
@@ -105,8 +104,16 @@ export default function MoreScreen() {
                     icon="user"
                     label="Profile Information"
                     isLast={false}
-                    onPress={() => router.push("/profile-settings")}
+                    onPress={() => router.navigate("/profile-settings")}
                   />
+                  {role === "Guardian" && (
+                    <MenuItem
+                      icon="credit-card"
+                      label="Subscription Plan"
+                      isLast={false}
+                      onPress={() => router.navigate("/plans")}
+                    />
+                  )}
                   <MenuItem icon="bell" label="Notifications" isLast={false} />
                   <MenuItem
                     icon="lock"

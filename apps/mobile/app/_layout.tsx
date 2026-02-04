@@ -1,7 +1,7 @@
 import { RefreshProvider } from "@/context/RefreshContext";
 import { RoleProvider } from "@/context/RoleContext";
 import { DarkTheme, DefaultTheme } from "@react-navigation/native";
-import { Slot, SplashScreen } from "expo-router";
+import { SplashScreen, Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useColorScheme } from "nativewind";
 import React, { useEffect, useState } from "react";
@@ -70,7 +70,7 @@ export default function RootLayout() {
           <AppThemeProvider>
             <RefreshProvider>
               <GlobalRefreshLayout>
-                <Slot />
+                <Stack screenOptions={{ headerShown: false }} />
                 <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
               </GlobalRefreshLayout>
             </RefreshProvider>
