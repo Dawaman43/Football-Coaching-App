@@ -1,11 +1,8 @@
 import { RoleProvider } from "@/context/RoleContext";
-import { useColorScheme } from "@/hooks/use-color-scheme";
-import {
-  DarkTheme,
-  DefaultTheme
-} from "@react-navigation/native";
+import { DarkTheme, DefaultTheme } from "@react-navigation/native";
 import { Slot, SplashScreen } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { useColorScheme } from "nativewind";
 import React, { useEffect, useState } from "react";
 import { Platform, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -22,9 +19,9 @@ if (Platform.OS === "web") {
 }
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
+  const { colorScheme } = useColorScheme();
   const fontsLoaded = useLoadFonts();
-  const theme = colorScheme === "light" ? DefaultTheme : DarkTheme;
+  const theme = colorScheme === "dark" ? DarkTheme : DefaultTheme;
   const [appIsReady, setAppIsReady] = useState(false);
 
   useEffect(() => {
@@ -55,12 +52,14 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <RoleProvider>
-          <AppThemeProvider
-            colorScheme={colorScheme === "light" ? "light" : "dark"}
-          >
-            <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+          <AppThemeProvider>
+            <View
+              key={colorScheme}
+              className={colorScheme === "dark" ? "dark" : ""}
+              style={{ flex: 1, backgroundColor: theme.colors.background }}
+            >
               <Slot />
-              <StatusBar style={colorScheme === "light" ? "dark" : "light"} />
+              <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
             </View>
           </AppThemeProvider>
         </RoleProvider>

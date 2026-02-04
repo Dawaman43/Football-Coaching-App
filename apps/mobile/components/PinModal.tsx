@@ -77,25 +77,25 @@ export function PinModal({
       <View className="flex-1 bg-black/50 justify-center items-center px-6">
         <Animated.View
           style={animatedStyle}
-          className="bg-white w-full max-w-sm rounded-[32px] p-6 shadow-xl"
+          className="bg-input w-full max-w-sm rounded-[32px] p-6 shadow-xl"
         >
           <View className="flex-row justify-end mb-2">
             <TouchableOpacity
               onPress={onClose}
-              className="w-8 h-8 items-center justify-center bg-gray-100 rounded-full"
+              className="w-8 h-8 items-center justify-center bg-secondary rounded-full"
             >
-              <Feather name="x" size={16} color="#4b5563" />
+              <Feather name="x" size={16} className="text-secondary" />
             </TouchableOpacity>
           </View>
 
           <View className="items-center mb-6">
-            <View className="w-16 h-16 bg-blue-50 rounded-full items-center justify-center mb-4">
-              <Feather name="lock" size={24} color="#3b82f6" />
+            <View className="w-16 h-16 bg-accent-light rounded-full items-center justify-center mb-4">
+              <Feather name="lock" size={24} className="text-accent" />
             </View>
-            <Text className="text-xl font-bold font-clash text-gray-900 mb-2">
+            <Text className="text-xl font-bold font-clash text-app mb-2">
               {title}
             </Text>
-            <Text className="text-gray-500 font-outfit text-center">
+            <Text className="text-secondary font-outfit text-center">
               {error ? (
                 <Text className="text-red-500 font-medium">{error}</Text>
               ) : (
@@ -110,12 +110,12 @@ export function PinModal({
                 key={index}
                 className={`w-14 h-16 rounded-2xl border-2 justify-center items-center ${
                   pin.length > index
-                    ? "border-blue-500 bg-blue-50"
-                    : "border-gray-100 bg-gray-50"
+                    ? "border-accent bg-accent-light"
+                    : "border-app bg-app"
                 }`}
               >
                 {pin.length > index && (
-                  <Text className="text-2xl font-bold font-clash text-gray-900">
+                  <Text className="text-2xl font-bold font-clash text-app">
                     {pin[index]}
                   </Text>
                 )}
@@ -146,7 +146,7 @@ export function PinModal({
                 onPress={handleDelete}
                 className="flex-1 h-14 items-center justify-center active:opacity-50"
               >
-                <Feather name="delete" size={24} color="#6b7280" />
+                <Feather name="delete" size={24} className="text-secondary" />
               </TouchableOpacity>
             </View>
           </View>
@@ -166,9 +166,9 @@ function KeypadButton({
   return (
     <TouchableOpacity
       onPress={onPress}
-      className="flex-1 h-14 items-center justify-center bg-gray-50 rounded-xl active:bg-gray-200"
+      className="flex-1 h-14 items-center justify-center bg-secondary rounded-xl active:bg-app border border-app"
     >
-      <Text className="text-2xl font-semibold font-outfit text-gray-900">
+      <Text className="text-2xl font-semibold font-outfit text-app">
         {number}
       </Text>
     </TouchableOpacity>

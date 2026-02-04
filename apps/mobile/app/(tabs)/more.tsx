@@ -7,34 +7,41 @@ import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { ThemeToggle } from "@/components/ThemeToggle";
+
 export default function MoreScreen() {
   const { role } = useRole();
   const router = useRouter();
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50" edges={["top"]}>
+    <SafeAreaView className="flex-1 bg-app" edges={["top"]}>
       <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
-        <View className="px-6 pt-6 pb-8 bg-white rounded-b-[40px] shadow-sm mb-6">
-          <Animated.Text
-            entering={FadeInDown.delay(100).springify()}
-            className="text-4xl font-clash text-gray-900 mb-8 tracking-tight"
-          >
-            Settings
-          </Animated.Text>
+        <View className="px-6 pt-6 pb-8 bg-input rounded-b-[40px] shadow-sm mb-6">
+          <View className="flex-row items-center justify-between mb-8">
+            <Animated.Text
+              entering={FadeInDown.delay(100).springify()}
+              className="text-4xl font-clash text-app tracking-tight"
+            >
+              Settings
+            </Animated.Text>
+            <Animated.View entering={FadeInDown.delay(100).springify()}>
+              <ThemeToggle />
+            </Animated.View>
+          </View>
 
           <Animated.View
             entering={FadeInDown.delay(200).springify()}
             className="flex-row items-center gap-5 mb-8"
           >
-            <View className="h-16 w-16 bg-gray-50 rounded-full items-center justify-center border border-gray-100 shadow-sm relative">
-              <Feather name="user" size={28} color="#6b7280" />
+            <View className="h-16 w-16 bg-secondary rounded-full items-center justify-center border border-app shadow-sm relative">
+              <Feather name="user" size={28} className="text-secondary" />
               <View className="absolute bottom-0 right-0 h-4 w-4 bg-green-500 rounded-full border-2 border-white" />
             </View>
             <View>
-              <Text className="text-xl font-bold font-clash text-gray-900 leading-tight">
+              <Text className="text-xl font-bold font-clash text-app leading-tight">
                 John Doe
               </Text>
-              <Text className="text-gray-500 font-outfit text-sm mt-0.5">
+              <Text className="text-secondary font-outfit text-sm mt-0.5">
                 john.doe@example.com
               </Text>
             </View>
@@ -50,7 +57,7 @@ export default function MoreScreen() {
             <Text className="text-xs font-bold font-outfit text-gray-400 uppercase mb-3 ml-2 tracking-wider">
               Account
             </Text>
-            <View className="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100">
+            <View className="bg-input rounded-3xl overflow-hidden shadow-sm border border-app">
               <MenuItem
                 icon="user"
                 label="Profile Information"
@@ -66,7 +73,7 @@ export default function MoreScreen() {
             <Text className="text-xs font-bold font-outfit text-gray-400 uppercase mb-3 ml-2 tracking-wider">
               Support & About
             </Text>
-            <View className="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100">
+            <View className="bg-input rounded-3xl overflow-hidden shadow-sm border border-app">
               <MenuItem icon="help-circle" label="Help Center" isLast={false} />
               <MenuItem
                 icon="message-square"
@@ -81,7 +88,7 @@ export default function MoreScreen() {
             <Text className="text-xs font-bold font-outfit text-gray-400 uppercase mb-3 ml-2 tracking-wider">
               Legal
             </Text>
-            <View className="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100">
+            <View className="bg-input rounded-3xl overflow-hidden shadow-sm border border-app">
               <MenuItem
                 icon="file-text"
                 label="Terms of Service"
@@ -126,15 +133,15 @@ function MenuItem({
   return (
     <TouchableOpacity
       onPress={onPress}
-      className={`flex-row items-center p-4 bg-white active:bg-gray-50 ${!isLast ? "border-b border-gray-50" : ""}`}
+      className={`flex-row items-center p-4 bg-input active:bg-secondary ${!isLast ? "border-b border-app" : ""}`}
     >
-      <View className="w-10 h-10 items-center justify-center bg-gray-50 rounded-full mr-3">
-        <Feather name={icon} size={18} color="#4b5563" />
+      <View className="w-10 h-10 items-center justify-center bg-secondary rounded-full mr-3">
+        <Feather name={icon} size={18} className="text-secondary" />
       </View>
-      <Text className="flex-1 font-outfit text-gray-900 text-[15px] font-medium">
+      <Text className="flex-1 font-outfit text-app text-[15px] font-medium">
         {label}
       </Text>
-      <Feather name="chevron-right" size={16} color="#d1d5db" />
+      <Feather name="chevron-right" size={16} className="text-secondary" />
     </TouchableOpacity>
   );
 }

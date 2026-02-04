@@ -18,11 +18,10 @@ import Animated, {
 
 export function RoleSwitcher() {
   const { role, setRole, guardianPin, checkPin } = useRole();
+
   const initialWidth = Dimensions.get("window").width - 56;
   const [containerWidth, setContainerWidth] = React.useState(initialWidth);
-
   const activeIndex = useSharedValue(role === "Guardian" ? 0 : 1);
-
   const [isPinModalVisible, setIsPinModalVisible] = useState(false);
   const [pinError, setPinError] = useState<string | undefined>();
 
@@ -78,6 +77,15 @@ export function RoleSwitcher() {
         },
       ],
       width: indicatorWidth,
+      // Using bg-accent (blue) logic, Reanimated needs explicit color for native driver sometimes?
+      // But NativeWind class works better.
+      // Background color animation in Reanimated usually requires specific color handling.
+      // For now we assume accent color is #3b82f6 (blue-500) or we use semantic variable?
+      // Reanimated style can't easily parse 'bg-accent'.
+      // Stick to hex for the animated blob to ensure it works,
+      // or use semantic color if we can resolve it.
+      // Let's use the explicit blue for the "Active" pill as per design,
+      // matching the text contrast.
       backgroundColor: "#3b82f6",
     };
   });
@@ -86,14 +94,14 @@ export function RoleSwitcher() {
     <View className="mb-0 overflow-hidden">
       <View className="flex-row items-center justify-between mb-4 px-1">
         <View className="flex-row items-center gap-3">
-          <View className="bg-gray-900 p-2.5 rounded-full shadow-sm">
-            <Feather name="repeat" size={18} color="#ffffff" />
+          <View className="bg-secondary p-2.5 rounded-full shadow-sm">
+            <Feather name="repeat" size={18} className="text-app" />
           </View>
           <View>
-            <Text className="text-lg font-bold font-clash text-gray-900 leading-tight">
+            <Text className="text-lg font-bold font-clash text-app leading-tight">
               Switch Profile
             </Text>
-            <Text className="text-xs font-outfit text-gray-500 font-medium tracking-wide">
+            <Text className="text-xs font-outfit text-secondary font-medium tracking-wide">
               MANAGE APP AS
             </Text>
           </View>
@@ -101,7 +109,7 @@ export function RoleSwitcher() {
       </View>
 
       <View
-        className="flex-row bg-gray-100 rounded-3x p-4 border border-gray-200 shadow-inner relative h-[64px] items-center"
+        className="flex-row bg-input rounded-3xl p-4 border border-app shadow-inner relative h-[64px] items-center"
         onLayout={handleLayout}
       >
         {containerWidth > 0 && (
@@ -114,14 +122,7 @@ export function RoleSwitcher() {
                 left: 1,
                 borderRadius: 24,
                 borderWidth: 1,
-                borderColor: "rgba(243, 244, 246, 0.5)", // gray-100/50
-                shadowColor: "#000",
-                shadowOffset: {
-                  width: 0,
-                  height: 1,
-                },
-                shadowOpacity: 0.05,
-                shadowRadius: 1,
+                borderColor: "rgba(0,0,0,0.05)",
                 elevation: 1,
               },
               animatedIndicatorStyle,
@@ -172,10 +173,15 @@ function RoleOption({
       className="flex-1 h-full flex-row items-center justify-center gap-2 z-10"
       hitSlop={8}
     >
-      <Feather name={icon} size={18} color={isActive ? "#ffffff" : "#6b7280"} />
+      <Feather
+        name={icon}
+        size={18}
+        // Active: white. Inactive: text-secondary.
+        className={isActive ? "text-white" : "text-secondary"}
+      />
       <Text
         className={`font-semibold font-outfit text-base ${
-          isActive ? "text-white" : "text-gray-500"
+          isActive ? "text-white" : "text-secondary"
         }`}
       >
         {label}
