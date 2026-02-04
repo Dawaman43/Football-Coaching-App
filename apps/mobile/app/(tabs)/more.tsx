@@ -1,6 +1,7 @@
 import { RoleSwitcher } from "@/components/RoleSwitcher";
 import { useRole } from "@/context/RoleContext";
 import { Feather } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
@@ -8,6 +9,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function MoreScreen() {
   const { role } = useRole();
+  const router = useRouter();
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50" edges={["top"]}>
@@ -53,6 +55,7 @@ export default function MoreScreen() {
                 icon="user"
                 label="Profile Information"
                 isLast={false}
+                onPress={() => router.push("/profile-settings")}
               />
               <MenuItem icon="bell" label="Notifications" isLast={false} />
               <MenuItem icon="lock" label="Privacy & Security" isLast={true} />
@@ -113,13 +116,16 @@ function MenuItem({
   icon,
   label,
   isLast,
+  onPress,
 }: {
   icon: any;
   label: string;
   isLast: boolean;
+  onPress?: () => void;
 }) {
   return (
     <TouchableOpacity
+      onPress={onPress}
       className={`flex-row items-center p-4 bg-white active:bg-gray-50 ${!isLast ? "border-b border-gray-50" : ""}`}
     >
       <View className="w-10 h-10 items-center justify-center bg-gray-50 rounded-full mr-3">

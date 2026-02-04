@@ -1,8 +1,15 @@
+import { PinModal } from "@/components/PinModal";
 import { useRole } from "@/context/RoleContext";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import React, { useEffect } from "react";
-import { LayoutChangeEvent, Pressable, Text, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import {
+  Dimensions,
+  LayoutChangeEvent,
+  Pressable,
+  Text,
+  View,
+} from "react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -10,9 +17,14 @@ import Animated, {
 } from "react-native-reanimated";
 
 export function RoleSwitcher() {
-  const { role, setRole } = useRole();
-  const [containerWidth, setContainerWidth] = React.useState(0);
+  const { role, setRole, guardianPin, checkPin } = useRole();
+  const initialWidth = Dimensions.get("window").width - 56;
+  const [containerWidth, setContainerWidth] = React.useState(initialWidth);
+
   const activeIndex = useSharedValue(role === "Guardian" ? 0 : 1);
+
+  const [isPinModalVisible, setIsPinModalVisible] = useState(false);
+  const [pinError, setPinError] = useState<string | undefined>();
 
   useEffect(() => {
     activeIndex.value = withSpring(role === "Guardian" ? 0 : 1, {
@@ -26,11 +38,30 @@ export function RoleSwitcher() {
   };
 
   const handleRoleChange = (newRole: "Guardian" | "Athlete") => {
-    if (role !== newRole) {
-      if (process.env.EXPO_OS !== "web") {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      }
-      setRole(newRole);
+    if (role === newRole) return;
+
+    if (newRole === "Guardian" && guardianPin) {
+      setPinError(undefined);
+      setIsPinModalVisible(true);
+      return;
+    }
+
+    performRoleSwitch(newRole);
+  };
+
+  const performRoleSwitch = (newRole: "Guardian" | "Athlete") => {
+    if (process.env.EXPO_OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    setRole(newRole);
+  };
+
+  const handlePinSuccess = (pin: string) => {
+    if (checkPin(pin)) {
+      setIsPinModalVisible(false);
+      performRoleSwitch("Guardian");
+    } else {
+      setPinError("Incorrect PIN");
     }
   };
 
@@ -111,6 +142,15 @@ export function RoleSwitcher() {
           onPress={() => handleRoleChange("Athlete")}
         />
       </View>
+
+      <PinModal
+        visible={isPinModalVisible}
+        onClose={() => setIsPinModalVisible(false)}
+        onSuccess={handlePinSuccess}
+        title="Enter Guardian PIN"
+        subtitle="Enter your PIN to switch to Guardian mode"
+        error={pinError}
+      />
     </View>
   );
 }
