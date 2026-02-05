@@ -1,5 +1,6 @@
 import { RefreshProvider } from "@/context/RefreshContext";
 import { RoleProvider } from "@/context/RoleContext";
+import { ReduxProvider } from "@/store/Provider";
 import { DarkTheme, DefaultTheme } from "@react-navigation/native";
 import { SplashScreen, Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -65,18 +66,22 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider>
-        <RoleProvider>
-          <AppThemeProvider>
-            <RefreshProvider>
-              <GlobalRefreshLayout>
-                <Stack screenOptions={{ headerShown: false }} />
-                <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
-              </GlobalRefreshLayout>
-            </RefreshProvider>
-          </AppThemeProvider>
-        </RoleProvider>
-      </SafeAreaProvider>
+      <ReduxProvider>
+        <SafeAreaProvider>
+          <RoleProvider>
+            <AppThemeProvider>
+              <RefreshProvider>
+                <GlobalRefreshLayout>
+                  <Stack screenOptions={{ headerShown: false }} />
+                  <StatusBar
+                    style={colorScheme === "dark" ? "light" : "dark"}
+                  />
+                </GlobalRefreshLayout>
+              </RefreshProvider>
+            </AppThemeProvider>
+          </RoleProvider>
+        </SafeAreaProvider>
+      </ReduxProvider>
     </GestureHandlerRootView>
   );
 }
