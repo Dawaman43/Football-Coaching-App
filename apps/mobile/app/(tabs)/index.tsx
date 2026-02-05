@@ -1,53 +1,75 @@
 import { AthleteDashboard } from "@/components/dashboard/AthleteDashboard";
 import { GuardianDashboard } from "@/components/dashboard/GuardianDashboard";
-import { ThemedScrollView } from "@/components/ThemedScrollView";
+import { CoachSection } from "@/components/home/CoachSection";
+import { TestimonialsSection } from "@/components/home/TestimonialsSection";
+import { Feather } from "@/components/ui/theme-icons";
 import { useRole } from "@/context/RoleContext";
-import { Feather } from "@expo/vector-icons";
-import React from "react";
-import { Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import React, { useMemo } from "react";
+import { ScrollView, Text, View } from "react-native";
+import Animated, { FadeInDown } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function HomeScreen() {
   const { role } = useRole();
+  const insets = useSafeAreaInsets();
 
-  const handleRefresh = async () => {
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    console.log("Refreshed Home Screen");
-  };
+  const greeting = useMemo(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good Morning";
+    if (hour < 18) return "Good Afternoon";
+    return "Good Evening";
+  }, []);
 
   return (
-    <SafeAreaView className="flex-1 bg-app" edges={["top"]}>
-      <ThemedScrollView
-        onRefresh={handleRefresh}
-        contentContainerStyle={{ paddingBottom: 40 }}
-      >
-        <View className="px-6 pt-6 pb-6 bg-input rounded-b-[32px] shadow-sm mb-6">
-          <View className="flex-row justify-between items-center">
-            <View>
-              <Text className="font-outfit text-muted text-sm mb-1">
-                {new Date().toLocaleDateString("en-US", {
-                  weekday: "long",
-                  day: "numeric",
-                  month: "long",
-                })}
-              </Text>
-              <Text className="font-clash text-2xl text-app">
-                Hi,{" "}
-                <Text className="text-accent">
-                  {role === "Guardian" ? "Parent" : "Athlete"}
-                </Text>
-              </Text>
-            </View>
-            <View className="h-12 w-12 bg-secondary rounded-full items-center justify-center border border-app">
-              <Feather name="user" size={20} className="text-app" />
-            </View>
-          </View>
-        </View>
+    <ScrollView
+      className="flex-1 bg-app"
+      contentContainerStyle={{
+        paddingTop: insets.top + 20,
+        paddingBottom: insets.bottom + 40,
+        paddingHorizontal: 24,
+      }}
+      showsVerticalScrollIndicator={false}
+    >
+      {/* Header Section */}
+      <View className="flex-row justify-between items-center mb-10">
+        <Animated.View
+          entering={FadeInDown.duration(600).springify()}
+          className="flex-1"
+        >
+          <Text className="font-clash text-4xl text-app leading-[1.1]">
+            {greeting},{"\n"}
+            <Text className="text-accent">
+              {role === "Guardian" ? "Parent" : "Athlete"}
+            </Text>
+          </Text>
+        </Animated.View>
 
-        <View className="px-6 gap-6">
-          {role === "Guardian" ? <GuardianDashboard /> : <AthleteDashboard />}
-        </View>
-      </ThemedScrollView>
-    </SafeAreaView>
+        <Animated.View
+          entering={FadeInDown.delay(100).duration(600).springify()}
+          className="h-14 w-14 bg-secondary rounded-[22px] border-2 border-app shadow-lg items-center justify-center relative"
+        >
+          <Feather name="user" size={24} className="text-app" />
+          <View className="absolute bottom-0 right-0 h-4 w-4 bg-emerald-500 rounded-full border-2 border-app" />
+        </Animated.View>
+      </View>
+
+      {/* Role-Specific Content Area */}
+      {role === "Guardian" ? <GuardianDashboard /> : <AthleteDashboard />}
+
+      {/* Shared Marketing & Trust Sections (Spec Section 5) */}
+      <View className="mt-12 gap-12">
+        <Animated.View
+          entering={FadeInDown.delay(600).duration(600).springify()}
+        >
+          <CoachSection />
+        </Animated.View>
+
+        <Animated.View
+          entering={FadeInDown.delay(700).duration(600).springify()}
+        >
+          <TestimonialsSection />
+        </Animated.View>
+      </View>
+    </ScrollView>
   );
 }

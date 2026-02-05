@@ -173,7 +173,6 @@ export default function ProfileSettingsScreen() {
               </Animated.View>
             )}
 
-            {/* Role-Specific: Athlete */}
             {role === "Athlete" && (
               <Animated.View
                 entering={FadeInDown.delay(200).springify()}

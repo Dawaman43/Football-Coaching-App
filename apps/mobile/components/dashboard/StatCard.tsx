@@ -1,3 +1,4 @@
+import { Feather } from "@/components/ui/theme-icons";
 import React from "react";
 import { Text, View } from "react-native";
 
@@ -6,28 +7,50 @@ interface StatCardProps {
   value: string;
   trend: string;
   good: boolean;
+  icon?: any;
+  color?: string;
 }
 
-export function StatCard({ label, value, trend, good }: StatCardProps) {
+export function StatCard({
+  label,
+  value,
+  trend,
+  good,
+  icon,
+  color = "bg-accent",
+}: StatCardProps) {
+  const iconColorClass = color.replace("bg-", "text-");
+
   return (
-    <View className="bg-input p-4 rounded-2xl border border-app shadow-sm flex-1 min-w-[100px]">
-      <Text className="text-muted text-xs font-outfit mb-1">{label}</Text>
-      <Text className="text-2xl font-bold font-clash text-app mb-2">
-        {value}
-      </Text>
-      <View
-        className={`self-start px-2 py-0.5 rounded ${
-          good ? "bg-green-50 dark:bg-green-950/30" : "bg-secondary"
-        }`}
-      >
-        <Text
-          className={`text-xs font-medium ${
-            good ? "text-green-700 dark:text-green-400" : "text-secondary"
+    <View className="bg-input p-4 rounded-3xl border border-app shadow-sm flex-1 min-w-[100px] relative overflow-hidden">
+      <View className="flex-row justify-between items-start mb-2">
+        <View className={`${color}/10 p-2 rounded-xl`}>
+          {icon && <Feather name={icon} size={16} className={iconColorClass} />}
+        </View>
+        <View
+          className={`px-2 py-0.5 rounded-lg ${
+            good ? "bg-green-500/10" : "bg-red-500/10"
           }`}
         >
-          {trend}
-        </Text>
+          <Text
+            className={`text-[10px] font-bold ${
+              good ? "text-green-500" : "text-red-500"
+            }`}
+          >
+            {trend}
+          </Text>
+        </View>
       </View>
+
+      <Text className="text-2xl font-bold font-clash text-app mb-0.5">
+        {value}
+      </Text>
+      <Text className="text-muted text-[10px] font-outfit uppercase tracking-wider">
+        {label}
+      </Text>
+      <View
+        className={`absolute -right-2 -bottom-2 w-12 h-12 ${color}/5 rounded-full`}
+      />
     </View>
   );
 }
