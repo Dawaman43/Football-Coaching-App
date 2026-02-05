@@ -13,7 +13,6 @@ import "./global.css";
 import useLoadFonts from "./hooks/useLoadFonts";
 import AppThemeProvider from "./theme/AppThemeProvider";
 
-// Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
 
 if (Platform.OS === "web") {
@@ -26,7 +25,6 @@ function GlobalRefreshLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <View
-      key={colorScheme}
       className={colorScheme === "dark" ? "dark" : ""}
       style={{ flex: 1, backgroundColor: theme.colors.background }}
     >
@@ -72,7 +70,9 @@ export default function RootLayout() {
             <AppThemeProvider>
               <RefreshProvider>
                 <GlobalRefreshLayout>
-                  <Stack screenOptions={{ headerShown: false }} />
+                  <Stack
+                    screenOptions={{ headerShown: false, animation: "none" }}
+                  />
                   <StatusBar
                     style={colorScheme === "dark" ? "light" : "dark"}
                   />

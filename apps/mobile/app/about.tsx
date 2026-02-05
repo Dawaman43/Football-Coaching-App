@@ -78,7 +78,7 @@ export default function AboutScreen() {
         />
 
         <Text className="text-center text-gray-400 font-outfit text-[10px] mt-8 uppercase tracking-[3px]">
-          © 2024 LIFT LAB LTD. ALL RIGHTS RESERVED.
+          © 2026 LIFT LAB LTD. ALL RIGHTS RESERVED.
         </Text>
       </ThemedScrollView>
     </SafeAreaView>

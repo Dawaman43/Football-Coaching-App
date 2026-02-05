@@ -1,99 +1,90 @@
-import { Feather } from "@expo/vector-icons";
-import { Tabs } from "expo-router";
-import React from "react";
-import { Platform } from "react-native";
-
 import { useAppTheme } from "@/app/theme/AppThemeProvider";
+import { SwipeableTabLayout, TabConfig } from "@/components/navigation";
 import { useRole } from "@/context/RoleContext";
+import { usePathname, useRouter } from "expo-router";
+import React, { useCallback, useMemo } from "react";
+
+import HomeScreen from "./index";
+import MessagesScreen from "./messages";
+import MoreScreen from "./more";
+import ParentPlatformScreen from "./parent-platform";
+import ProgramsScreen from "./programs";
+import ScheduleScreen from "./schedule";
+
+const TAB_ROUTES: TabConfig[] = [
+  { key: "index", label: "Home", icon: "home" },
+  { key: "programs", label: "Programs", icon: "activity" },
+  { key: "messages", label: "Messages", icon: "message-square" },
+  { key: "parent-platform", label: "Parent", icon: "book" },
+  { key: "schedule", label: "Schedule", icon: "calendar" },
+  { key: "more", label: "More", icon: "menu" },
+];
+
+const TAB_COMPONENTS: Record<string, React.ComponentType> = {
+  index: React.memo(HomeScreen),
+  programs: React.memo(ProgramsScreen),
+  messages: React.memo(MessagesScreen),
+  "parent-platform": React.memo(ParentPlatformScreen),
+  schedule: React.memo(ScheduleScreen),
+  more: React.memo(MoreScreen),
+};
 
 export default function TabLayout() {
   const { colors } = useAppTheme();
   const { role } = useRole();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const visibleTabs = useMemo(() => {
+    if (role === "Athlete") {
+      return TAB_ROUTES.filter((tab) => tab.key !== "parent-platform");
+    }
+    return TAB_ROUTES;
+  }, [role]);
+
+  const initialIndex = useMemo(() => {
+    // Normalize path by removing leading slash and (tabs) group
+    const normalizedPath = pathname
+      .replace(/^\//, "")
+      .replace(/^\(tabs\)\/?/, "");
+    const routeName = normalizedPath.split("/")[0] || "index";
+
+    const index = visibleTabs.findIndex((tab) => tab.key === routeName);
+    return index >= 0 ? index : 0;
+  }, [pathname, visibleTabs]);
+
+  const handleIndexChange = useCallback(
+    (index: number) => {
+      const tab = visibleTabs[index];
+      if (!tab) return;
+
+      // Extract current tab key to avoid redundant navigation
+      const relativePart = pathname.replace(/^\/\(tabs\)\/?/, "");
+      const currentTabKey = relativePart.split("/")[0] || "index";
+
+      if (tab.key !== currentTabKey) {
+        const path = tab.key === "index" ? "/(tabs)" : `/(tabs)/${tab.key}`;
+        router.replace(path as any);
+      }
+    },
+    [visibleTabs, router, pathname],
+  );
+
+  const screens = useMemo(() => {
+    return visibleTabs.map((tab) => {
+      const Component = TAB_COMPONENTS[tab.key];
+      // Return component directly to avoid double wrapping with PagerView's container
+      return <Component key={tab.key} />;
+    });
+  }, [visibleTabs]); // visibleTabs only changes when role changes
 
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: colors.tint,
-        tabBarInactiveTintColor: "#64748b",
-        tabBarStyle: {
-          backgroundColor: colors.background,
-          borderTopWidth: 1,
-          borderTopColor: colors.border,
-          height: Platform.OS === "ios" ? 88 : 68,
-          paddingTop: 8,
-        },
-        tabBarLabelStyle: {
-          fontFamily: "Outfit-Medium",
-          fontSize: 12,
-          paddingBottom: Platform.OS === "ios" ? 0 : 8,
-        },
-        headerShown: false,
-      }}
+    <SwipeableTabLayout
+      tabs={visibleTabs}
+      initialIndex={initialIndex}
+      onIndexChange={handleIndexChange}
     >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: "Home",
-          tabBarIcon: ({ color }) => (
-            <Feather name="home" size={24} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="programs"
-        options={{
-          title: "Programs",
-          tabBarIcon: ({ color }) => (
-            <Feather name="activity" size={24} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="messages"
-        options={{
-          title: "Messages",
-          tabBarIcon: ({ color }) => (
-            <Feather name="message-square" size={24} color={color} />
-          ),
-        }}
-      />
-
-      <Tabs.Screen
-        name="parent-platform"
-        options={{
-          title: "Parent Platform",
-          href: role === "Guardian" ? undefined : null,
-          tabBarIcon: ({ color }) => (
-            <Feather name="book" size={24} color={color} />
-          ),
-        }}
-      />
-
-      <Tabs.Screen
-        name="schedule"
-        options={{
-          title: "Schedule",
-          tabBarIcon: ({ color }) => (
-            <Feather name="calendar" size={24} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="more"
-        options={{
-          title: "More",
-          tabBarIcon: ({ color }) => (
-            <Feather name="menu" size={24} color={color} />
-          ),
-        }}
-      />
-
-      <Tabs.Screen
-        name="(onboarding)"
-        options={{
-          href: null,
-        }}
-      />
-    </Tabs>
+      {screens}
+    </SwipeableTabLayout>
   );
 }
