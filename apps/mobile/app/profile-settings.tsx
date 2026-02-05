@@ -132,6 +132,7 @@ export default function ProfileSettingsScreen() {
           color="bg-accent"
           iconColor="text-white"
           onPress={() => router.navigate("/(tabs)/more")}
+          fullWidth={true}
         />
       </ThemedScrollView>
       <PinModal

@@ -97,7 +97,7 @@ function ParallaxWithReanimated({
 }) {
   const { interpolate, useAnimatedRef, useAnimatedStyle, useScrollOffset } =
     Reanimated;
-  const scrollRef = useAnimatedRef<any>();
+  const scrollRef = useAnimatedRef();
   const scrollOffset = useScrollOffset(scrollRef);
   const headerAnimatedStyle = useAnimatedStyle(() => {
     return {

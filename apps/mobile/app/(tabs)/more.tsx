@@ -114,11 +114,17 @@ export default function MoreScreen() {
                       onPress={() => router.navigate("/plans")}
                     />
                   )}
-                  <MenuItem icon="bell" label="Notifications" isLast={false} />
+                  <MenuItem
+                    icon="bell"
+                    label="Notifications"
+                    isLast={false}
+                    onPress={() => router.navigate("/notifications")}
+                  />
                   <MenuItem
                     icon="lock"
                     label="Privacy & Security"
                     isLast={true}
+                    onPress={() => router.navigate("/privacy-security")}
                   />
                 </View>
               </Animated.View>
@@ -132,13 +138,20 @@ export default function MoreScreen() {
                     icon="help-circle"
                     label="Help Center"
                     isLast={false}
+                    onPress={() => router.navigate("/help-center")}
                   />
                   <MenuItem
                     icon="message-square"
                     label="Send Feedback"
                     isLast={false}
+                    onPress={() => router.navigate("/feedback")}
                   />
-                  <MenuItem icon="info" label="About App" isLast={true} />
+                  <MenuItem
+                    icon="info"
+                    label="About App"
+                    isLast={true}
+                    onPress={() => router.navigate("/about")}
+                  />
                 </View>
               </Animated.View>
 
@@ -151,11 +164,13 @@ export default function MoreScreen() {
                     icon="file-text"
                     label="Terms of Service"
                     isLast={false}
+                    onPress={() => router.navigate("/terms")}
                   />
                   <MenuItem
                     icon="shield"
                     label="Privacy Policy"
                     isLast={true}
+                    onPress={() => router.navigate("/privacy-policy")}
                   />
                 </View>
               </Animated.View>
@@ -168,6 +183,7 @@ export default function MoreScreen() {
               color="bg-red-50 dark:bg-red-950/30"
               iconColor="text-red-600 dark:text-red-400"
               onPress={() => {}}
+              fullWidth={true}
             />
           </Animated.View>
 
