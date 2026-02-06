@@ -2,7 +2,7 @@ import { useAppTheme } from "@/app/theme/AppThemeProvider";
 import { SwipeableTabLayout, TabConfig } from "@/components/navigation";
 import { useRole } from "@/context/RoleContext";
 import { Slot, usePathname, useRouter, useSegments } from "expo-router";
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo } from "react";
 
 import HomeScreen from "./index";
 import MessagesScreen from "./messages";
@@ -37,8 +37,8 @@ export default function TabLayout() {
   const segments = useSegments();
 
   const isOnboarding =
-    segments.some((segment) => segment === "(onboarding)") ||
-    pathname.includes("onboarding");
+    segments.some((segment) => segment === "onboarding") ||
+    pathname.includes("/onboarding");
 
   const visibleTabs = useMemo(() => {
     if (role === "Athlete") {

@@ -14,7 +14,7 @@ export default function OnboardingScreen() {
       </View>
 
       <Pressable
-        onPress={() => router.push("/(tabs)/(onboarding)/register")}
+        onPress={() => router.push("/(tabs)/onboarding/register")}
         className="w-full border border-app h-14 rounded-xl items-center justify-center"
       >
         <Text className="text-app font-bold text-lg font-outfit">

@@ -59,7 +59,7 @@ export default function VerifyScreen() {
         </View>
 
         <Pressable
-          onPress={() => router.push("/(tabs)/(onboarding)")}
+          onPress={() => router.push("/(tabs)/onboarding")}
           className="bg-accent h-14 rounded-xl items-center justify-center mb-8"
         >
           <Text className="text-white font-bold text-lg font-outfit">
