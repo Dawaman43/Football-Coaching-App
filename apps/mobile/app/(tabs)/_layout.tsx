@@ -1,7 +1,7 @@
 import { useAppTheme } from "@/app/theme/AppThemeProvider";
 import { SwipeableTabLayout, TabConfig } from "@/components/navigation";
 import { useRole } from "@/context/RoleContext";
-import { usePathname, useRouter } from "expo-router";
+import { Slot, usePathname, useRouter, useSegments } from "expo-router";
 import React, { useCallback, useMemo } from "react";
 
 import HomeScreen from "./index";
@@ -34,6 +34,11 @@ export default function TabLayout() {
   const { role } = useRole();
   const router = useRouter();
   const pathname = usePathname();
+  const segments = useSegments();
+
+  const isOnboarding =
+    segments.some((segment) => segment === "(onboarding)") ||
+    pathname.includes("onboarding");
 
   const visibleTabs = useMemo(() => {
     if (role === "Athlete") {
@@ -77,6 +82,10 @@ export default function TabLayout() {
       return <Component key={tab.key} />;
     });
   }, [visibleTabs]); // visibleTabs only changes when role changes
+
+  if (isOnboarding) {
+    return <Slot />;
+  }
 
   return (
     <SwipeableTabLayout

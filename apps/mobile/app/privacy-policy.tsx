@@ -1,19 +1,28 @@
 import { ActionButton } from "@/components/dashboard/ActionButton";
 import { ThemedScrollView } from "@/components/ThemedScrollView";
 import { Feather } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function PrivacyPolicyScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ from?: string }>();
+
+  const handleBack = () => {
+    if (params.from) {
+      router.navigate(params.from as any);
+    } else {
+      router.back();
+    }
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-app" edges={["top"]}>
       <View className="px-6 py-4 flex-row items-center justify-between border-b border-app">
         <TouchableOpacity
-          onPress={() => router.navigate("/(tabs)/more")}
+          onPress={handleBack}
           className="h-10 w-10 items-center justify-center bg-secondary rounded-full"
         >
           <Feather name="arrow-left" size={20} className="text-app" />
@@ -69,7 +78,7 @@ export default function PrivacyPolicyScreen() {
         <View className="mt-12">
           <ActionButton
             label="I Understand"
-            onPress={() => router.navigate("/(tabs)/more")}
+            onPress={handleBack}
             color="bg-secondary"
             icon="check"
             fullWidth={true}

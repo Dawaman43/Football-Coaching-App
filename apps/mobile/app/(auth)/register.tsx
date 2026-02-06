@@ -263,7 +263,14 @@ export default function RegisterScreen() {
                 </View>
                 <Text className="ml-3 text-secondary text-base font-outfit">
                   I agree to the{" "}
-                  <Pressable onPress={() => router.push("/terms")}>
+                  <Pressable
+                    onPress={() =>
+                      router.push({
+                        pathname: "/terms",
+                        params: { from: "/(auth)/register" },
+                      })
+                    }
+                  >
                     <Text className="text-accent font-bold">
                       Terms & Conditions
                     </Text>
