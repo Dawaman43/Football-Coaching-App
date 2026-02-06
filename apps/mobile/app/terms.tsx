@@ -13,7 +13,7 @@ export default function TermsScreen() {
     <SafeAreaView className="flex-1 bg-app" edges={["top"]}>
       <View className="px-6 py-4 flex-row items-center justify-between border-b border-app">
         <TouchableOpacity
-          onPress={() => router.navigate("/(tabs)/more")}
+          onPress={() => router.back()}
           className="h-10 w-10 items-center justify-center bg-secondary rounded-full"
         >
           <Feather name="arrow-left" size={20} className="text-app" />
@@ -67,7 +67,7 @@ export default function TermsScreen() {
         <View className="mt-12">
           <ActionButton
             label="I Understand"
-            onPress={() => router.navigate("/(tabs)/more")}
+            onPress={() => router.back()}
             color="bg-secondary"
             icon="check"
             fullWidth={true}
