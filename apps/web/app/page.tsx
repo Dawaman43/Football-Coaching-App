@@ -29,32 +29,32 @@ import { PriorityQueue } from "../components/admin/dashboard/priority-queue";
 import { QuickActions } from "../components/admin/dashboard/quick-actions";
 
 const kpis = [
-  { label: "Active Athletes", value: "214", delta: "+12 this week" },
+  { label: "Total Athletes", value: "214", delta: "+12 this week" },
   { label: "Premium Clients", value: "18", delta: "3 awaiting review" },
   { label: "Unread Messages", value: "27", delta: "9 priority" },
-  { label: "Bookings Today", value: "6", delta: "2 in-person" },
+  { label: "Bookings Today", value: "6", delta: "2 1:1 sessions" },
 ];
 
 const queue = [
   {
     title: "Video Review",
-    detail: "Miles T. • Single-leg hop assessment",
-    status: "Awaiting feedback",
+    detail: "Miles T. • Technique assessment",
+    status: "Priority Feedback",
   },
   {
-    title: "Message",
-    detail: "Ava P. • Knee soreness after practice",
-    status: "Premium",
+    title: "Onboarding Review",
+    detail: "Liam R. • PHP Plus application",
+    status: "Assign Program",
   },
   {
-    title: "Program Approval",
-    detail: "Liam R. • PHP Plus onboarding complete",
-    status: "Assign template",
+    title: "Priority Message",
+    detail: "Ava P. • Injury update",
+    status: "Reply Needed",
   },
   {
-    title: "Parent Platform",
-    detail: "Nutrition Week 2 article draft",
-    status: "Ready to publish",
+    title: "Content Draft",
+    detail: "Growth & Maturation article",
+    status: "Ready to Publish",
   },
 ];
 
@@ -124,34 +124,34 @@ const topAthletes = [
 ];
 
 const tierDistribution = [
-  { label: "Program", value: 120, color: "hsl(210 20% 70%)" },
-  { label: "Plus", value: 76, color: "hsl(195 45% 55%)" },
-  { label: "Premium", value: 18, color: "hsl(210 55% 42%)" },
+  { label: "Program", value: 120, color: "hsl(142 20% 40%)" },
+  { label: "Plus", value: 76, color: "hsl(142 45% 45%)" },
+  { label: "Premium", value: 18, color: "hsl(142 71% 45%)" },
 ];
 
 const stackedActivity = [
   {
     label: "Messages",
     segments: [
-      { value: 40, color: "hsl(210 55% 42%)" },
-      { value: 30, color: "hsl(195 45% 55%)" },
-      { value: 18, color: "hsl(210 20% 70%)" },
+      { value: 40, color: "hsl(142 71% 45%)" },
+      { value: 30, color: "hsl(142 45% 45%)" },
+      { value: 18, color: "hsl(142 20% 40%)" },
     ],
   },
   {
     label: "Bookings",
     segments: [
-      { value: 18, color: "hsl(210 55% 42%)" },
-      { value: 10, color: "hsl(195 45% 55%)" },
-      { value: 6, color: "hsl(210 20% 70%)" },
+      { value: 18, color: "hsl(142 71% 45%)" },
+      { value: 10, color: "hsl(142 45% 45%)" },
+      { value: 6, color: "hsl(142 20% 40%)" },
     ],
   },
   {
     label: "Uploads",
     segments: [
-      { value: 10, color: "hsl(210 55% 42%)" },
-      { value: 6, color: "hsl(195 45% 55%)" },
-      { value: 4, color: "hsl(210 20% 70%)" },
+      { value: 10, color: "hsl(142 71% 45%)" },
+      { value: 6, color: "hsl(142 45% 45%)" },
+      { value: 4, color: "hsl(142 20% 40%)" },
     ],
   },
 ];

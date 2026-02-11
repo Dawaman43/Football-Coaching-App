@@ -7,34 +7,51 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const CATEGORIES = [
   {
     id: "1",
-    title: "Growth and Maturation",
-    icon: "trending-up",
-    color: "bg-blue-500",
+    title: "Youth Strength Training 101",
+    icon: "book-open",
+    color: "bg-emerald-500",
   },
   {
     id: "2",
-    title: "Injury Prevention",
-    icon: "shield",
-    color: "bg-green-500",
+    title: "Benefits of Strength Training",
+    icon: "award",
+    color: "bg-emerald-600",
   },
   {
     id: "3",
-    title: "Sleep and Recovery",
-    icon: "moon",
-    color: "bg-purple-500",
+    title: "Why We Warm Up",
+    icon: "thermometer",
+    color: "bg-emerald-700",
   },
   {
     id: "4",
-    title: "Nutrition for Youth",
-    icon: "coffee",
-    color: "bg-orange-500",
+    title: "Recovery for Young Athletes",
+    icon: "battery-charging",
+    color: "bg-emerald-800",
   },
-  { id: "5", title: "Training Load", icon: "bar-chart-2", color: "bg-danger" },
+  {
+    id: "5",
+    title: "Nutrition for Young Athletes",
+    icon: "coffee",
+    color: "bg-emerald-500",
+  },
   {
     id: "6",
-    title: "Mindset & Confidence",
-    icon: "smile",
-    color: "bg-teal-500",
+    title: "Training Safety Rules",
+    icon: "shield",
+    color: "bg-emerald-600",
+  },
+  {
+    id: "7",
+    title: "Signs of Overtraining",
+    icon: "alert-triangle",
+    color: "bg-emerald-700",
+  },
+  {
+    id: "8",
+    title: "Myths About Kids & Strength",
+    icon: "help-circle",
+    color: "bg-emerald-800",
   },
 ];
 
@@ -53,10 +70,10 @@ export default function ParentPlatformScreen() {
       >
         <View className="mb-8">
           <Text className="text-4xl font-clash text-app mb-2">
-            Parent Platform
+            Parent Education Platform
           </Text>
           <Text className="text-base font-outfit text-secondary leading-relaxed">
-            Essential education hub for parents of young athletes.
+            Understand your athlete's training with our educational module for parents.
           </Text>
         </View>
 

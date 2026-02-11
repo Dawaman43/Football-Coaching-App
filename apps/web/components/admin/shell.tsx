@@ -31,11 +31,18 @@ export function AdminShell({ title, subtitle, actions, children }: AdminShellPro
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent>
-                <AdminSidebarContent currentPath={pathname} />
+              <SheetContent className="w-72 border-r border-border bg-card p-0">
+                <div className="h-full px-6 py-8">
+                  <AdminSidebarContent currentPath={pathname} />
+                </div>
               </SheetContent>
             </Sheet>
-            <div className="text-sm font-semibold text-foreground">PHP Admin</div>
+            <div className="flex items-center gap-2">
+              <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary text-[10px] font-bold text-primary-foreground">
+                PH
+              </div>
+              <span className="text-sm font-bold tracking-tight text-foreground uppercase">Performance</span>
+            </div>
             <div className="flex items-center gap-2">
               <ThemeToggle />
               <div className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-secondary text-xs font-semibold text-foreground">

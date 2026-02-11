@@ -79,7 +79,7 @@ export function ProgramCard({ tier, onPress, index = 0 }: ProgramCardProps) {
               </Text>
             </View>
             <View
-              className={`flex-1 h-12 rounded-2xl items-center justify-center ${tier.color}`}
+              className={`flex-1 h-12 rounded-2xl items-center justify-center bg-accent`}
             >
               <Text className="text-white font-bold font-clash text-base">
                 {tier.id === "premium" ? "Apply Now" : "Select Plan"}

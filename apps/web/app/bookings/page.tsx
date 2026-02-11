@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { AdminShell } from "../../components/admin/shell";
 import { SectionHeader } from "../../components/admin/section-header";
@@ -11,33 +11,66 @@ import { BookingsFilters } from "../../components/admin/bookings/bookings-filter
 import { BookingsList } from "../../components/admin/bookings/bookings-list";
 import { AvailabilityPanel } from "../../components/admin/bookings/availability-panel";
 
-const bookings = [
-  {
-    name: "Role Model Meeting",
-    athlete: "Jordan Miles",
-    time: "13:00",
-    type: "Video",
-  },
-  {
-    name: "Lift Lab 1:1",
-    athlete: "Kayla Davis",
-    time: "15:30",
-    type: "In-person",
-  },
-  {
-    name: "Group Call",
-    athlete: "PHP Plus Cohort",
-    time: "18:00",
-    type: "Video",
-  },
-];
+type BookingItem = {
+  name: string;
+  athlete: string;
+  time: string;
+  type: string;
+};
+
+type ServiceType = {
+  id: number;
+  name: string;
+  type: string;
+  durationMinutes: number;
+  capacity?: number | null;
+  fixedStartTime?: string | null;
+  programTier?: string | null;
+};
 
 export default function BookingsPage() {
-  const isLoading = false;
+  const [isLoading, setIsLoading] = useState(true);
+  const [bookings, setBookings] = useState<BookingItem[]>([]);
+  const [services, setServices] = useState<ServiceType[]>([]);
   const [activeDialog, setActiveDialog] = useState<BookingsDialog>(null);
-  const [selectedBooking, setSelectedBooking] = useState<(typeof bookings)[number] | null>(null);
+  const [selectedBooking, setSelectedBooking] = useState<BookingItem | null>(null);
   const [activeChip, setActiveChip] = useState<string>("All");
   const chips = ["All", "Video", "In-person", "Group", "Premium"];
+
+  useEffect(() => {
+    let mounted = true;
+    async function load() {
+      setIsLoading(true);
+      try {
+        const [bookingsRes, servicesRes] = await Promise.all([
+          fetch("/api/backend/admin/bookings"),
+          fetch("/api/backend/bookings/services"),
+        ]);
+
+        if (bookingsRes.ok) {
+          const data = await bookingsRes.json();
+          const mapped = (data.bookings ?? []).map((item: any) => ({
+            name: item.serviceName ?? item.type ?? "Session",
+            athlete: item.athleteName ?? "Unknown athlete",
+            time: item.startsAt ? new Date(item.startsAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "--",
+            type: item.type ?? "Session",
+          }));
+          if (mounted) setBookings(mapped);
+        }
+
+        if (servicesRes.ok) {
+          const data = await servicesRes.json();
+          if (mounted) setServices(data.items ?? []);
+        }
+      } finally {
+        if (mounted) setIsLoading(false);
+      }
+    }
+    load();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const filteredBookings = useMemo(() => {
     if (activeChip === "All") return bookings;
@@ -49,7 +82,7 @@ export default function BookingsPage() {
   return (
     <AdminShell
       title="Bookings"
-      subtitle="Manage availability and upcoming sessions."
+      subtitle="Manage availability and sessions with Coach Mike Green."
       actions={<Button onClick={() => setActiveDialog("new-service")}>New Service</Button>}
     >
       <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
@@ -71,6 +104,7 @@ export default function BookingsPage() {
             ) : (
               <BookingsList
                 bookings={filteredBookings}
+                isLoading={isLoading}
                 onSelect={(booking) => {
                   setSelectedBooking(booking);
                   setActiveDialog("booking-details");
@@ -100,6 +134,23 @@ export default function BookingsPage() {
         active={activeDialog}
         onClose={() => setActiveDialog(null)}
         selectedBooking={selectedBooking}
+        services={services}
+        onRefresh={() => {
+          setIsLoading(true);
+          fetch("/api/backend/admin/bookings")
+            .then((res) => res.ok ? res.json() : null)
+            .then((data) => {
+              if (!data) return;
+              const mapped = (data.bookings ?? []).map((item: any) => ({
+                name: item.serviceName ?? item.type ?? "Session",
+                athlete: item.athleteName ?? "Unknown athlete",
+                time: item.startsAt ? new Date(item.startsAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "--",
+                type: item.type ?? "Session",
+              }));
+              setBookings(mapped);
+            })
+            .finally(() => setIsLoading(false));
+        }}
       />
     </AdminShell>
   );

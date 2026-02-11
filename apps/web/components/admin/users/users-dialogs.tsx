@@ -52,20 +52,43 @@ export function UsersDialogs({ active, onClose, selectedName }: UsersDialogsProp
             </>
           ) : null}
           {active === "review-onboarding" ? (
-            <>
-              <Textarea placeholder="Review notes" />
+            <div className="space-y-4">
+              <div className="grid gap-3 rounded-2xl border border-border bg-secondary/20 p-4 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Age / Level:</span>
+                  <span className="font-medium">14 / U15 Academy</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Training Days:</span>
+                  <span className="font-medium">4 days/week</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Injuries:</span>
+                  <span className="font-medium text-destructive">Osgood-Schlatter (Left Knee)</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Goals:</span>
+                  <span className="font-medium">Improve explosiveness & speed</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Equipment:</span>
+                  <span className="font-medium">Full gym access</span>
+                </div>
+              </div>
+              <Textarea placeholder="Coach feedback or notes" />
               <Select>
                 <option>Approve or request changes</option>
-                <option>Approve</option>
-                <option>Request changes</option>
+                <option>Approve & Assign Tier</option>
+                <option>Request Clarification</option>
+                <option>Deny</option>
               </Select>
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={onClose}>
                   Cancel
                 </Button>
-                <Button onClick={onClose}>Submit</Button>
+                <Button onClick={onClose}>Finalize Review</Button>
               </div>
-            </>
+            </div>
           ) : null}
           {active === "assign-program" ? (
             <>

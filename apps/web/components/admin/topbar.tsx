@@ -85,9 +85,9 @@ export function AdminTopbar({
           onClick={() => setOpenProfile(true)}
         >
           <div className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-secondary text-xs font-semibold text-foreground">
-            LL
+            MG
           </div>
-          <span className="hidden text-sm md:inline">Coach</span>
+          <span className="hidden text-sm md:inline">Coach Mike Green</span>
           <ChevronDown className="h-3 w-3" />
         </Button>
       </div>
@@ -161,7 +161,11 @@ export function AdminTopbar({
             <Button
               variant="outline"
               className="w-full justify-start"
-              onClick={() => setProfileAction("Logging out...")}
+              onClick={async () => {
+                setProfileAction("Logging out...");
+                await fetch("/api/auth/logout", { method: "POST" });
+                router.replace("/login");
+              }}
             >
               Logout
             </Button>

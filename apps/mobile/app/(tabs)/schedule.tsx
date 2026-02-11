@@ -43,7 +43,7 @@ const EVENTS: ScheduleEvent[] = [
     type: "training",
     tag: "Athlete",
     athlete: "Marcus",
-    coach: "Coach Oliver",
+    coach: "Coach Mike Green",
     notes: "Lower body focus + acceleration mechanics.",
   },
   {
@@ -52,11 +52,11 @@ const EVENTS: ScheduleEvent[] = [
     title: "Premium Call",
     timeStart: "13:00",
     timeEnd: "13:30",
-    location: "Zoom · Coach Oliver",
+    location: "Zoom · Coach Mike Green",
     type: "call",
     tag: "Parent",
     athlete: "Marcus",
-    coach: "Coach Oliver",
+    coach: "Coach Mike Green",
     notes: "Progress review + next block planning.",
   },
   {
@@ -69,7 +69,7 @@ const EVENTS: ScheduleEvent[] = [
     type: "recovery",
     tag: "Athlete",
     athlete: "Marcus",
-    coach: "Coach Oliver",
+    coach: "Coach Mike Green",
     notes: "15 min mobility flow + foam rolling.",
   },
   {
@@ -82,7 +82,7 @@ const EVENTS: ScheduleEvent[] = [
     type: "training",
     tag: "Athlete",
     athlete: "Marcus",
-    coach: "Coach Oliver",
+    coach: "Coach Mike Green",
     notes: "Starts, shin angles, and marching drills.",
   },
   {
@@ -108,7 +108,7 @@ const EVENTS: ScheduleEvent[] = [
     type: "call",
     tag: "Parent",
     athlete: "Marcus",
-    coach: "Coach Oliver",
+    coach: "Coach Mike Green",
     notes: "Q&A for growth and recovery.",
   },
 ];

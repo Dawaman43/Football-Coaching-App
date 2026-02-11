@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { AdminShell } from "../../components/admin/shell";
 import { EmptyState } from "../../components/admin/empty-state";
@@ -13,7 +13,7 @@ import { OnboardingQueue } from "../../components/admin/users/onboarding-queue";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardHeader } from "../../components/ui/card";
 
-const users = [
+const fallbackUsers = [
   {
     name: "Ava Patterson",
     tier: "Premium",
@@ -45,12 +45,39 @@ const users = [
 ];
 
 export default function UsersPage() {
+  const [users, setUsers] = useState(fallbackUsers);
+  const [isLoading, setIsLoading] = useState(false);
   const hasUsers = users.length > 0;
-  const isLoading = false;
   const [activeDialog, setActiveDialog] = useState<UsersDialog>(null);
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [activeChip, setActiveChip] = useState<string>("All");
   const chips = ["All", "Premium", "Plus", "Program", "Pending"];
+
+  useEffect(() => {
+    let mounted = true;
+    async function load() {
+      setIsLoading(true);
+      try {
+        const res = await fetch("/api/backend/admin/users");
+        if (!res.ok) return;
+        const data = await res.json();
+        const mapped = (data.users ?? []).map((user: any) => ({
+          name: user.name ?? user.email,
+          tier: user.role === "admin" || user.role === "superAdmin" ? "Admin" : "Program",
+          status: "Active",
+          lastActive: "Recently",
+          onboarding: "Complete",
+        }));
+        if (mounted && mapped.length) setUsers(mapped);
+      } finally {
+        if (mounted) setIsLoading(false);
+      }
+    }
+    load();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const filteredUsers = useMemo(() => {
     if (activeChip === "All") return users;

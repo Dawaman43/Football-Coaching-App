@@ -27,7 +27,7 @@ export function ContentTabs({
   const [showTermsPreview, setShowTermsPreview] = useState(false);
   const [showPrivacyPreview, setShowPrivacyPreview] = useState(false);
 
-  const insertAtCursor = (ref: React.RefObject<HTMLTextAreaElement>, value: string) => {
+  const insertAtCursor = (ref: React.RefObject<HTMLTextAreaElement | null>, value: string) => {
     const el = ref.current;
     if (!el) return;
     const start = el.selectionStart ?? 0;
@@ -40,7 +40,7 @@ export function ContentTabs({
   };
 
   const wrapSelection = (
-    ref: React.RefObject<HTMLTextAreaElement>,
+    ref: React.RefObject<HTMLTextAreaElement | null>,
     prefix: string,
     suffix: string,
     placeholder = ""
@@ -60,7 +60,7 @@ export function ContentTabs({
   };
 
   const prefixLines = (
-    ref: React.RefObject<HTMLTextAreaElement>,
+    ref: React.RefObject<HTMLTextAreaElement | null>,
     prefix: string,
     placeholder = ""
   ) => {
@@ -121,6 +121,7 @@ export function ContentTabs({
         <TabsTrigger value="home">Home</TabsTrigger>
         <TabsTrigger value="parent">Parent Platform</TabsTrigger>
         <TabsTrigger value="programs">Programs</TabsTrigger>
+        <TabsTrigger value="physio">Physio</TabsTrigger>
         <TabsTrigger value="legal">Legal</TabsTrigger>
       </TabsList>
       <div className="flex gap-2 overflow-auto pb-1 md:hidden">
@@ -139,8 +140,16 @@ export function ContentTabs({
         <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Coach Story</Label>
-              <Textarea placeholder="Write the coach story..." />
+              <Label>Platform Headline</Label>
+              <Input placeholder="e.g. Parent Education Platform" />
+            </div>
+            <div className="space-y-2">
+              <Label>Platform Description</Label>
+              <Textarea placeholder="e.g. Understand your athlete's training with our educational module for parents." />
+            </div>
+            <div className="space-y-2">
+              <Label>Coach Welcome Message</Label>
+              <Textarea placeholder="e.g. Welcome back, [Name]! Learn what your child is learning in the gym this week." />
             </div>
             <div className="space-y-2">
               <Label>Intro Video URL</Label>
@@ -181,10 +190,14 @@ export function ContentTabs({
             <div className="space-y-2">
               <Label>Category</Label>
               <Select>
-                <option>Growth & Maturation</option>
-                <option>Injury Prevention</option>
-                <option>Nutrition</option>
-                <option>Mindset</option>
+                <option>Youth Strength Training 101</option>
+                <option>Benefits of Strength Training</option>
+                <option>Why We Warm Up</option>
+                <option>Recovery for Young Athletes</option>
+                <option>Nutrition for Young Athletes</option>
+                <option>Training Safety Rules</option>
+                <option>Signs of Overtraining and Fatigue</option>
+                <option>Myths About Kids & Strength Training</option>
               </Select>
             </div>
             <div className="space-y-2">
@@ -208,6 +221,31 @@ export function ContentTabs({
             <Button className="w-full" onClick={onPublishParent}>
               Publish Article
             </Button>
+          </div>
+        </div>
+      </TabsContent>
+      <TabsContent value="physio">
+        <div className="grid gap-6 lg:grid-cols-2">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Referral Provider Name</Label>
+              <Input placeholder="e.g. Elite Physio" />
+            </div>
+            <div className="space-y-2">
+              <Label>Referral Link</Label>
+              <Input placeholder="https://physio-provider.com" />
+            </div>
+          </div>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Plus/Premium Discount (%)</Label>
+              <Input type="number" placeholder="10" />
+            </div>
+            <div className="space-y-2">
+              <Label>Discount Code</Label>
+              <Input placeholder="LIFTLAB10" />
+            </div>
+            <Button className="w-full">Save Physio Settings</Button>
           </div>
         </div>
       </TabsContent>

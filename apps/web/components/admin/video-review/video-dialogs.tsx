@@ -53,7 +53,18 @@ export function VideoDialogs({
                 <option>Awaiting feedback</option>
                 <option>Reviewed</option>
               </Select>
-              <Textarea placeholder="Write feedback..." />
+              <div className="space-y-2 rounded-2xl border border-primary/20 bg-primary/5 p-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">
+                    AI
+                  </span>
+                  <span className="font-semibold text-primary">Form Analysis Insights</span>
+                </div>
+                <p className="text-xs text-primary/80">
+                  Detected inconsistent knee alignment during landing. Recommendation: Focus on glute medius activation in warmup.
+                </p>
+              </div>
+              <Textarea placeholder="Write coach feedback..." />
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={onClose}>
                   Save Draft

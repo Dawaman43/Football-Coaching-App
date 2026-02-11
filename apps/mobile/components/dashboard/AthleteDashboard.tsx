@@ -172,10 +172,10 @@ function PremiumBadge({
   rarity: string;
 }) {
   const rarityColors: any = {
-    Common: "bg-slate-400",
-    Rare: "bg-blue-500",
-    Epic: "bg-purple-500",
-    Legendary: "bg-warning",
+    Common: "bg-emerald-200",
+    Rare: "bg-emerald-400",
+    Epic: "bg-emerald-600",
+    Legendary: "bg-emerald-800",
   };
 
   return (

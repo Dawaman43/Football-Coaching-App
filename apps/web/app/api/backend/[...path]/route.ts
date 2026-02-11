@@ -1,0 +1,53 @@
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+
+const apiBase = process.env.API_BASE_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
+
+async function forward(req: NextRequest) {
+  if (!apiBase) {
+    return NextResponse.json({ error: "API base URL not configured" }, { status: 500 });
+  }
+
+  const url = new URL(req.url);
+  const path = url.pathname.replace("/api/backend", "");
+  const target = `${apiBase}${path}${url.search}`;
+
+  const accessToken = req.cookies.get("accessToken")?.value;
+
+  const res = await fetch(target, {
+    method: req.method,
+    headers: {
+      "Content-Type": req.headers.get("content-type") ?? "application/json",
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+    },
+    body: req.method === "GET" || req.method === "HEAD" ? undefined : await req.text(),
+  });
+
+  const data = await res.text();
+  return new NextResponse(data, {
+    status: res.status,
+    headers: {
+      "Content-Type": res.headers.get("content-type") ?? "application/json",
+    },
+  });
+}
+
+export async function GET(req: NextRequest) {
+  return forward(req);
+}
+
+export async function POST(req: NextRequest) {
+  return forward(req);
+}
+
+export async function PUT(req: NextRequest) {
+  return forward(req);
+}
+
+export async function PATCH(req: NextRequest) {
+  return forward(req);
+}
+
+export async function DELETE(req: NextRequest) {
+  return forward(req);
+}
