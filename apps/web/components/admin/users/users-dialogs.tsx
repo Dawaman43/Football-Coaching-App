@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../../ui/dialog";
 import { Button } from "../../ui/button";
 import { Input } from "../../ui/input";
@@ -15,10 +16,28 @@ export type UsersDialog =
 type UsersDialogsProps = {
   active: UsersDialog;
   onClose: () => void;
-  selectedName?: string | null;
+  selectedUserId?: number | null;
 };
 
-export function UsersDialogs({ active, onClose, selectedName }: UsersDialogsProps) {
+export function UsersDialogs({ active, onClose, selectedUserId }: UsersDialogsProps) {
+  const [onboarding, setOnboarding] = useState<any | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [programTier, setProgramTier] = useState("PHP");
+
+  useEffect(() => {
+    let mounted = true;
+    async function load() {
+      if (!selectedUserId || (active !== "review-onboarding" && active !== "assign-program")) return;
+      const res = await fetch(`/api/backend/admin/users/${selectedUserId}/onboarding`);
+      if (!res.ok) return;
+      const data = await res.json();
+      if (mounted) setOnboarding(data);
+    }
+    load();
+    return () => {
+      mounted = false;
+    };
+  }, [selectedUserId, active]);
   return (
     <Dialog open={active !== null} onOpenChange={onClose}>
       <DialogContent>
@@ -29,7 +48,7 @@ export function UsersDialogs({ active, onClose, selectedName }: UsersDialogsProp
             {active === "assign-program" && "Assign Program"}
           </DialogTitle>
           <DialogDescription>
-            {selectedName ? `Selected: ${selectedName}` : "UI-only for now."}
+            {selectedUserId ? `Selected user #${selectedUserId}` : "Select a user."}
           </DialogDescription>
         </DialogHeader>
         <div className="mt-6 space-y-4">
@@ -55,55 +74,99 @@ export function UsersDialogs({ active, onClose, selectedName }: UsersDialogsProp
             <div className="space-y-4">
               <div className="grid gap-3 rounded-2xl border border-border bg-secondary/20 p-4 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Age / Level:</span>
-                  <span className="font-medium">14 / U15 Academy</span>
+                  <span className="text-muted-foreground">Age / Team:</span>
+                  <span className="font-medium">
+                    {onboarding?.athlete?.age ?? "--"} / {onboarding?.athlete?.team ?? "--"}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Training Days:</span>
-                  <span className="font-medium">4 days/week</span>
+                  <span className="font-medium">
+                    {onboarding?.athlete?.trainingPerWeek ?? "--"} days/week
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Injuries:</span>
-                  <span className="font-medium text-destructive">Osgood-Schlatter (Left Knee)</span>
+                  <span className="font-medium">
+                    {onboarding?.athlete?.injuries ? JSON.stringify(onboarding.athlete.injuries) : "None"}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Goals:</span>
-                  <span className="font-medium">Improve explosiveness & speed</span>
+                  <span className="font-medium">
+                    {onboarding?.athlete?.performanceGoals ?? "--"}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Equipment:</span>
-                  <span className="font-medium">Full gym access</span>
+                  <span className="font-medium">
+                    {onboarding?.athlete?.equipmentAccess ?? "--"}
+                  </span>
                 </div>
               </div>
               <Textarea placeholder="Coach feedback or notes" />
-              <Select>
-                <option>Approve or request changes</option>
-                <option>Approve & Assign Tier</option>
-                <option>Request Clarification</option>
-                <option>Deny</option>
+              <Select value={programTier} onChange={(e) => setProgramTier(e.target.value)}>
+                <option value="PHP">Approve & Assign PHP</option>
+                <option value="PHP_Plus">Approve & Assign PHP Plus</option>
+                <option value="PHP_Premium">Approve & Assign Premium</option>
               </Select>
+              {error ? <p className="text-sm text-red-500">{error}</p> : null}
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={onClose}>
                   Cancel
                 </Button>
-                <Button onClick={onClose}>Finalize Review</Button>
+                <Button
+                  onClick={async () => {
+                    if (!selectedUserId) return;
+                    setError(null);
+                    const res = await fetch(`/api/backend/admin/users/program-tier`, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ athleteId: onboarding?.athlete?.id, programTier }),
+                    });
+                    if (!res.ok) {
+                      setError("Failed to update tier");
+                      return;
+                    }
+                    onClose();
+                  }}
+                >
+                  Finalize Review
+                </Button>
               </div>
             </div>
           ) : null}
           {active === "assign-program" ? (
             <>
-              <Select>
-                <option>Assign template</option>
-                <option>PHP Program Week 1</option>
-                <option>PHP Plus Week 1</option>
-                <option>PHP Premium Custom</option>
+              <Select value={programTier} onChange={(e) => setProgramTier(e.target.value)}>
+                <option value="PHP">PHP Program</option>
+                <option value="PHP_Plus">PHP Plus</option>
+                <option value="PHP_Premium">PHP Premium</option>
               </Select>
               <Textarea placeholder="Assignment notes" />
+              {error ? <p className="text-sm text-red-500">{error}</p> : null}
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={onClose}>
                   Cancel
                 </Button>
-                <Button onClick={onClose}>Assign</Button>
+                <Button
+                  onClick={async () => {
+                    if (!selectedUserId) return;
+                    setError(null);
+                    const res = await fetch(`/api/backend/admin/enrollments`, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ athleteId: onboarding?.athlete?.id, programType: programTier }),
+                    });
+                    if (!res.ok) {
+                      setError("Failed to assign program");
+                      return;
+                    }
+                    onClose();
+                  }}
+                >
+                  Assign
+                </Button>
               </div>
             </>
           ) : null}

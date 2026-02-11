@@ -15,6 +15,7 @@ import { Card, CardContent, CardHeader } from "../../components/ui/card";
 
 const fallbackUsers = [
   {
+    id: 1,
     name: "Ava Patterson",
     tier: "Premium",
     status: "Active",
@@ -22,6 +23,7 @@ const fallbackUsers = [
     onboarding: "Complete",
   },
   {
+    id: 2,
     name: "Jordan Miles",
     tier: "Plus",
     status: "Active",
@@ -29,6 +31,7 @@ const fallbackUsers = [
     onboarding: "Complete",
   },
   {
+    id: 3,
     name: "Liam Rivers",
     tier: "Plus",
     status: "Pending",
@@ -36,6 +39,7 @@ const fallbackUsers = [
     onboarding: "Awaiting review",
   },
   {
+    id: 4,
     name: "Maya Chen",
     tier: "Program",
     status: "Active",
@@ -49,7 +53,7 @@ export default function UsersPage() {
   const [isLoading, setIsLoading] = useState(false);
   const hasUsers = users.length > 0;
   const [activeDialog, setActiveDialog] = useState<UsersDialog>(null);
-  const [selectedUser, setSelectedUser] = useState<string | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [activeChip, setActiveChip] = useState<string>("All");
   const chips = ["All", "Premium", "Plus", "Program", "Pending"];
 
@@ -62,6 +66,7 @@ export default function UsersPage() {
         if (!res.ok) return;
         const data = await res.json();
         const mapped = (data.users ?? []).map((user: any) => ({
+          id: user.id,
           name: user.name ?? user.email,
           tier: user.role === "admin" || user.role === "superAdmin" ? "Admin" : "Program",
           status: "Active",
@@ -89,7 +94,7 @@ export default function UsersPage() {
 
   const onboardingQueue = useMemo(
     () => users.filter((user) => user.onboarding !== "Complete"),
-    []
+    [users]
   );
 
   return (
@@ -111,8 +116,20 @@ export default function UsersPage() {
               </div>
             ) : hasUsers ? (
               <>
-                <UsersTable users={filteredUsers} onSelect={setSelectedUser} />
-                <UsersCards users={filteredUsers} onSelect={setSelectedUser} />
+                <UsersTable
+                  users={filteredUsers}
+                  onSelect={(userId) => {
+                    setSelectedUserId(userId);
+                    setActiveDialog("review-onboarding");
+                  }}
+                />
+                <UsersCards
+                  users={filteredUsers}
+                  onSelect={(userId) => {
+                    setSelectedUserId(userId);
+                    setActiveDialog("review-onboarding");
+                  }}
+                />
               </>
             ) : (
               <EmptyState
@@ -139,12 +156,12 @@ export default function UsersPage() {
             ) : (
               <OnboardingQueue
                 items={onboardingQueue}
-                onReview={(name) => {
-                  setSelectedUser(name);
+                onReview={(userId) => {
+                  setSelectedUserId(userId);
                   setActiveDialog("review-onboarding");
                 }}
-                onAssign={(name) => {
-                  setSelectedUser(name);
+                onAssign={(userId) => {
+                  setSelectedUserId(userId);
                   setActiveDialog("assign-program");
                 }}
               />
@@ -156,7 +173,7 @@ export default function UsersPage() {
       <UsersDialogs
         active={activeDialog}
         onClose={() => setActiveDialog(null)}
-        selectedName={selectedUser}
+        selectedUserId={selectedUserId}
       />
     </AdminShell>
   );

@@ -1,6 +1,7 @@
 import { Badge } from "../../ui/badge";
 
 type UserCard = {
+  id: number;
   name: string;
   tier: string;
   status: string;
@@ -10,7 +11,7 @@ type UserCard = {
 
 type UsersCardsProps = {
   users: UserCard[];
-  onSelect: (name: string) => void;
+  onSelect: (userId: number) => void;
 };
 
 export function UsersCards({ users, onSelect }: UsersCardsProps) {
@@ -21,7 +22,7 @@ export function UsersCards({ users, onSelect }: UsersCardsProps) {
           type="button"
           key={user.name}
           className="w-full rounded-2xl border border-border bg-secondary/40 p-4 text-left text-sm"
-          onClick={() => onSelect(user.name)}
+          onClick={() => onSelect(user.id)}
         >
           <div className="flex items-center justify-between">
             <p className="font-semibold text-foreground">{user.name}</p>

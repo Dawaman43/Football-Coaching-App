@@ -9,6 +9,7 @@ import {
 } from "../../ui/table";
 
 type UserRow = {
+  id: number;
   name: string;
   tier: string;
   status: string;
@@ -18,7 +19,7 @@ type UserRow = {
 
 type UsersTableProps = {
   users: UserRow[];
-  onSelect: (name: string) => void;
+  onSelect: (userId: number) => void;
 };
 
 export function UsersTable({ users, onSelect }: UsersTableProps) {
@@ -39,7 +40,7 @@ export function UsersTable({ users, onSelect }: UsersTableProps) {
             <TableRow
               key={user.name}
               className="hover:bg-secondary/60"
-              onClick={() => onSelect(user.name)}
+              onClick={() => onSelect(user.id)}
             >
               <TableCell className="font-medium text-foreground">
                 {user.name}
