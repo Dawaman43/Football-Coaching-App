@@ -5,6 +5,7 @@ import { EmptyState } from "../empty-state";
 import { cn } from "../../../lib/utils";
 
 type Thread = {
+  userId: number;
   name: string;
   preview: string;
   time: string;
@@ -15,8 +16,8 @@ type Thread = {
 
 type InboxListProps = {
   threads: Thread[];
-  selected?: string | null;
-  onSelect: (name: string) => void;
+  selected?: number | null;
+  onSelect: (userId: number) => void;
   onFilterSelect: (chip: string) => void;
 };
 
@@ -53,9 +54,9 @@ export function InboxList({
             <button
               key={thread.name}
               type="button"
-              onClick={() => onSelect(thread.name)}
+              onClick={() => onSelect(thread.userId)}
               className={`flex w-full items-center justify-between rounded-2xl border border-border p-4 text-left text-sm transition ${
-                selected === thread.name
+                selected === thread.userId
                   ? "bg-background"
                   : "bg-secondary/40 hover:border-primary/40"
               }`}

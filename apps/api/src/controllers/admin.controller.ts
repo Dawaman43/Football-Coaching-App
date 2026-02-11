@@ -9,6 +9,9 @@ import {
   createSession,
   getUserOnboarding,
   listBookingsAdmin,
+  listMessageThreadsAdmin,
+  listThreadMessagesAdmin,
+  sendMessageAdmin,
   listUsers,
   updateAthleteProgramTier,
 } from "../services/admin.service";
@@ -139,4 +142,22 @@ export async function addExercise(req: Request, res: Response) {
 export async function listBookings(req: Request, res: Response) {
   const bookings = await listBookingsAdmin();
   return res.status(200).json({ bookings });
+}
+
+export async function listMessageThreads(req: Request, res: Response) {
+  const threads = await listMessageThreadsAdmin(req.user!.id);
+  return res.status(200).json({ threads });
+}
+
+export async function listThreadMessages(req: Request, res: Response) {
+  const userId = z.coerce.number().int().min(1).parse(req.params.userId);
+  const messages = await listThreadMessagesAdmin(req.user!.id, userId);
+  return res.status(200).json({ messages });
+}
+
+export async function sendAdminMessage(req: Request, res: Response) {
+  const userId = z.coerce.number().int().min(1).parse(req.params.userId);
+  const body = z.object({ content: z.string().min(1) }).parse(req.body);
+  const message = await sendMessageAdmin({ coachId: req.user!.id, userId, content: body.content });
+  return res.status(201).json({ message });
 }

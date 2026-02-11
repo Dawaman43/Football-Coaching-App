@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq, inArray, or } from "drizzle-orm";
 
 import { db } from "../db";
 import {
@@ -7,6 +7,7 @@ import {
   enrollmentTable,
   exerciseTable,
   guardianTable,
+  messageTable,
   programTable,
   serviceTypeTable,
   sessionExerciseTable,
@@ -166,4 +167,71 @@ export async function listBookingsAdmin() {
     .leftJoin(athleteTable, eq(bookingTable.athleteId, athleteTable.id));
 
   return rows;
+}
+
+export async function listMessageThreadsAdmin(coachId: number) {
+  const messages = await db
+    .select()
+    .from(messageTable)
+    .where(or(eq(messageTable.senderId, coachId), eq(messageTable.receiverId, coachId)));
+
+  const threads = new Map<number, { lastMessage: typeof messages[number]; unread: number }>();
+  for (const msg of messages) {
+    const otherId = msg.senderId === coachId ? msg.receiverId : msg.senderId;
+    const current = threads.get(otherId);
+    const isUnread = msg.receiverId === coachId && !msg.read;
+    if (!current || new Date(msg.createdAt) > new Date(current.lastMessage.createdAt)) {
+      threads.set(otherId, { lastMessage: msg, unread: (current?.unread ?? 0) + (isUnread ? 1 : 0) });
+    } else if (isUnread) {
+      current.unread += 1;
+    }
+  }
+
+  const userIds = Array.from(threads.keys());
+  const users = userIds.length
+    ? await db.select().from(userTable).where(inArray(userTable.id, userIds))
+    : [];
+
+  return userIds.map((id) => {
+    const info = threads.get(id)!;
+    const user = users.find((u) => u.id === id);
+    return {
+      userId: id,
+      name: user?.name ?? user?.email ?? "Unknown",
+      preview: info.lastMessage.content,
+      time: info.lastMessage.createdAt,
+      unread: info.unread,
+    };
+  });
+}
+
+export async function listThreadMessagesAdmin(coachId: number, userId: number) {
+  return db
+    .select()
+    .from(messageTable)
+    .where(
+      or(
+        and(eq(messageTable.senderId, coachId), eq(messageTable.receiverId, userId)),
+        and(eq(messageTable.senderId, userId), eq(messageTable.receiverId, coachId))
+      )
+    )
+    .orderBy(messageTable.createdAt);
+}
+
+export async function sendMessageAdmin(input: {
+  coachId: number;
+  userId: number;
+  content: string;
+}) {
+  const result = await db
+    .insert(messageTable)
+    .values({
+      senderId: input.coachId,
+      receiverId: input.userId,
+      content: input.content,
+      contentType: "text",
+    })
+    .returning();
+
+  return result[0];
 }

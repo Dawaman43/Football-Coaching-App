@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { AdminShell } from "../../components/admin/shell";
 import { SectionHeader } from "../../components/admin/section-header";
@@ -10,8 +10,26 @@ import { InboxList } from "../../components/admin/messaging/inbox-list";
 import { ConversationPanel } from "../../components/admin/messaging/conversation-panel";
 import { MessageDialogs, type MessagingDialog } from "../../components/admin/messaging/message-dialogs";
 
-const threads = [
+type ThreadItem = {
+  userId: number;
+  name: string;
+  preview: string;
+  time: string;
+  priority: boolean;
+  unread?: number;
+  pinned?: boolean;
+};
+
+type MessageItem = {
+  author: string;
+  time: string;
+  text: string;
+  status?: "sent" | "delivered" | "read";
+};
+
+const fallbackThreads: ThreadItem[] = [
   {
+    userId: 1,
     name: "Ava Patterson",
     preview: "Knee is sore after practice",
     time: "2m",
@@ -19,123 +37,71 @@ const threads = [
     unread: 2,
     pinned: true,
   },
-  {
-    name: "Miles Turner",
-    preview: "Uploaded the latest sprint video",
-    time: "1h",
-    priority: true,
-    unread: 1,
-  },
-  {
-    name: "Kayla Davis",
-    preview: "Thanks for the warmup notes",
-    time: "3h",
-    priority: false,
-  },
-  {
-    name: "PHP Plus Cohort",
-    preview: "Group call questions list",
-    time: "Yesterday",
-    priority: false,
-  },
 ];
-
-const messagesByThread: Record<
-  string,
-  {
-    author: string;
-    time: string;
-    text: string;
-    reactions?: { emoji: string; count: number }[];
-    status?: "sent" | "delivered" | "read";
-  }[]
-> = {
-  "Ava Patterson": [
-    {
-      author: "Ava",
-      time: "11:02",
-      text: "Knee is sore after practice. Should I reduce today’s workload?",
-      reactions: [
-        { emoji: "💪", count: 1 },
-        { emoji: "🙏", count: 1 },
-      ],
-    },
-    {
-      author: "Coach",
-      time: "11:10",
-      text: "Let’s cut volume by 20% and focus on recovery work tonight.",
-      status: "read",
-    },
-  ],
-  "Miles Turner": [
-    {
-      author: "Miles",
-      time: "09:40",
-      text: "Uploaded the latest sprint video. Can you review form?",
-      reactions: [{ emoji: "👀", count: 1 }],
-    },
-  ],
-  "Kayla Davis": [
-    {
-      author: "Kayla",
-      time: "Yesterday",
-      text: "Thanks for the warmup notes!",
-    },
-  ],
-  "PHP Plus Cohort": [
-    {
-      author: "Parent Group",
-      time: "Yesterday",
-      text: "What should we bring for the group call?",
-      status: "delivered",
-    },
-  ],
-};
-
-const profiles: Record<
-  string,
-  { tier: string; status: string; lastActive: string; tags: string[] }
-> = {
-  "Ava Patterson": {
-    tier: "Premium",
-    status: "Active",
-    lastActive: "2m ago",
-    tags: ["Knee Rehab", "Priority"],
-  },
-  "Miles Turner": {
-    tier: "Premium",
-    status: "Active",
-    lastActive: "1h ago",
-    tags: ["Speed Work"],
-  },
-  "Kayla Davis": {
-    tier: "Plus",
-    status: "Active",
-    lastActive: "3h ago",
-    tags: ["Warmups"],
-  },
-  "PHP Plus Cohort": {
-    tier: "Plus",
-    status: "Group",
-    lastActive: "Yesterday",
-    tags: ["Group Call"],
-  },
-};
 
 export default function MessagingPage() {
   const [activeDialog, setActiveDialog] = useState<MessagingDialog>(null);
-  const [selectedThread, setSelectedThread] = useState<string | null>(
-    threads[0]?.name ?? null
-  );
+  const [threads, setThreads] = useState<ThreadItem[]>(fallbackThreads);
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(fallbackThreads[0]?.userId ?? null);
   const [activeFilter, setActiveFilter] = useState<string>("All");
-  const [messagesState, setMessagesState] = useState(messagesByThread);
-  const [myReactions, setMyReactions] = useState<Record<string, string | null>>({});
+  const [messages, setMessages] = useState<MessageItem[]>([]);
+
+  const selectedThread = useMemo(
+    () => threads.find((thread) => thread.userId === selectedUserId) ?? null,
+    [threads, selectedUserId]
+  );
+
+  useEffect(() => {
+    let mounted = true;
+    async function loadThreads() {
+      const res = await fetch("/api/backend/admin/messages/threads");
+      if (!res.ok) return;
+      const data = await res.json();
+      const mapped = (data.threads ?? []).map((thread: any) => ({
+        userId: thread.userId,
+        name: thread.name,
+        preview: thread.preview ?? "",
+        time: thread.time ? new Date(thread.time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "",
+        priority: (thread.unread ?? 0) > 0,
+        unread: thread.unread ?? 0,
+      }));
+      if (mounted && mapped.length) {
+        setThreads(mapped);
+        if (!selectedUserId) setSelectedUserId(mapped[0].userId);
+      }
+    }
+    loadThreads();
+    return () => {
+      mounted = false;
+    };
+  }, [selectedUserId]);
+
+  useEffect(() => {
+    let mounted = true;
+    async function loadMessages() {
+      if (!selectedUserId || !selectedThread) return;
+      const res = await fetch(`/api/backend/admin/messages/${selectedUserId}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      const mapped = (data.messages ?? []).map((msg: any) => ({
+        author: msg.senderId === selectedUserId ? selectedThread.name : "Coach",
+        time: msg.createdAt ? new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "",
+        text: msg.content,
+        status: msg.read ? "read" : "delivered",
+      }));
+      if (mounted) setMessages(mapped);
+    }
+    loadMessages();
+    return () => {
+      mounted = false;
+    };
+  }, [selectedUserId, selectedThread]);
 
   const filteredThreads = useMemo(() => {
     if (activeFilter === "All") return threads;
     if (activeFilter === "Premium") return threads.filter((thread) => thread.priority);
     return threads;
-  }, [activeFilter]);
+  }, [activeFilter, threads]);
 
   return (
     <AdminShell
@@ -151,8 +117,8 @@ export default function MessagingPage() {
           <CardContent>
             <InboxList
               threads={filteredThreads}
-              selected={selectedThread}
-              onSelect={setSelectedThread}
+              selected={selectedUserId}
+              onSelect={setSelectedUserId}
               onFilterSelect={setActiveFilter}
             />
           </CardContent>
@@ -161,56 +127,26 @@ export default function MessagingPage() {
         <Card className="h-full">
           <CardHeader>
             <SectionHeader
-              title={selectedThread ?? "Conversation"}
-              description={
-                selectedThread
-                  ? `${profiles[selectedThread]?.tier ?? "Client"} • ${
-                      profiles[selectedThread]?.lastActive ?? "Active"
-                    }`
-                  : "Select a thread"
-              }
+              title={selectedThread?.name ?? "Conversation"}
+              description={selectedThread ? "Active" : "Select a thread"}
             />
           </CardHeader>
           <CardContent>
             <ConversationPanel
-              name={selectedThread}
-              messages={selectedThread ? messagesState[selectedThread] ?? [] : []}
-              profile={selectedThread ? profiles[selectedThread] ?? null : null}
-              onReact={(messageIndex, emoji) => {
-                if (!selectedThread) return;
-                setMessagesState((prev) => {
-                  const next = { ...prev };
-                  const threadMessages = [...(next[selectedThread] ?? [])];
-                  const message = { ...threadMessages[messageIndex] };
-                  const reactions = message.reactions ? [...message.reactions] : [];
-                  const key = `${selectedThread}-${messageIndex}`;
-                  const previousEmoji = myReactions[key];
-                  if (previousEmoji === emoji) {
-                    const target = reactions.find((r) => r.emoji === emoji);
-                    if (target) {
-                      target.count = Math.max(0, target.count - 1);
-                    }
-                    setMyReactions((prevMap) => ({ ...prevMap, [key]: null }));
-                  } else {
-                    if (previousEmoji) {
-                      const previousTarget = reactions.find((r) => r.emoji === previousEmoji);
-                      if (previousTarget) {
-                        previousTarget.count = Math.max(0, previousTarget.count - 1);
-                      }
-                    }
-                    const existing = reactions.find((r) => r.emoji === emoji);
-                    if (existing) {
-                      existing.count += 1;
-                    } else {
-                      reactions.push({ emoji, count: 1 });
-                    }
-                    setMyReactions((prevMap) => ({ ...prevMap, [key]: emoji }));
-                  }
-                  message.reactions = reactions.filter((r) => r.count > 0);
-                  threadMessages[messageIndex] = message;
-                  next[selectedThread] = threadMessages;
-                  return next;
+              name={selectedThread?.name ?? null}
+              messages={messages}
+              profile={null}
+              onSend={async (text) => {
+                if (!selectedUserId) return;
+                await fetch(`/api/backend/admin/messages/${selectedUserId}`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ content: text }),
                 });
+                setMessages((prev) => [
+                  ...prev,
+                  { author: "Coach", time: "Now", text, status: "sent" },
+                ]);
               }}
             />
           </CardContent>

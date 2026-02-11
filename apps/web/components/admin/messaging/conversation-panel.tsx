@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Button } from "../../ui/button";
 import { Textarea } from "../../ui/textarea";
 import { EmptyState } from "../empty-state";
@@ -22,6 +23,7 @@ type ConversationPanelProps = {
     tags: string[];
   } | null;
   onReact?: (messageIndex: number, emoji: string) => void;
+  onSend?: (text: string) => void;
 };
 
 export function ConversationPanel({
@@ -29,7 +31,9 @@ export function ConversationPanel({
   messages,
   profile,
   onReact,
+  onSend,
 }: ConversationPanelProps) {
+  const [draft, setDraft] = useState("");
   if (!name) {
     return (
       <EmptyState
@@ -122,7 +126,12 @@ export function ConversationPanel({
         Ava is typing...
       </div>
       <div className="space-y-3 rounded-2xl border border-border bg-background p-4">
-        <Textarea placeholder="Write a response..." className="min-h-[120px]" />
+        <Textarea
+          placeholder="Write a response..."
+          className="min-h-[120px]"
+          value={draft}
+          onChange={(event) => setDraft(event.target.value)}
+        />
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <Button size="icon" variant="ghost">
@@ -140,7 +149,14 @@ export function ConversationPanel({
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline">Save Draft</Button>
-            <Button className="gap-2">
+            <Button
+              className="gap-2"
+              onClick={() => {
+                if (!draft.trim()) return;
+                onSend?.(draft.trim());
+                setDraft("");
+              }}
+            >
               Send
               <Send className="h-4 w-4" />
             </Button>
