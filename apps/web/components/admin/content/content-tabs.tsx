@@ -10,8 +10,22 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs";
 import { Textarea } from "../../ui/textarea";
 
 type ContentTabsProps = {
-  onSaveHome: () => void;
-  onPublishParent: () => void;
+  onSaveHome: (data: {
+    headline: string;
+    description: string;
+    welcome: string;
+    introVideoUrl: string;
+    testimonials: string;
+    heroImageUrl: string;
+    tier: string;
+  }) => void;
+  onPublishParent: (data: {
+    title: string;
+    category: string;
+    body: string;
+    mediaUrl: string;
+    tier: string;
+  }) => void;
   onSavePrograms: () => void;
   onSaveLegal: () => void;
 };
@@ -26,6 +40,18 @@ export function ContentTabs({
   const privacyRef = useRef<HTMLTextAreaElement | null>(null);
   const [showTermsPreview, setShowTermsPreview] = useState(false);
   const [showPrivacyPreview, setShowPrivacyPreview] = useState(false);
+  const [homeHeadline, setHomeHeadline] = useState("");
+  const [homeDescription, setHomeDescription] = useState("");
+  const [homeWelcome, setHomeWelcome] = useState("");
+  const [homeIntroVideo, setHomeIntroVideo] = useState("");
+  const [homeTestimonials, setHomeTestimonials] = useState("");
+  const [homeHeroImage, setHomeHeroImage] = useState("");
+  const [homeTier, setHomeTier] = useState("all");
+  const [parentTitle, setParentTitle] = useState("");
+  const [parentCategory, setParentCategory] = useState("Youth Strength Training 101");
+  const [parentBody, setParentBody] = useState("");
+  const [parentMediaUrl, setParentMediaUrl] = useState("");
+  const [parentTier, setParentTier] = useState("PHP_Plus");
 
   const insertAtCursor = (ref: React.RefObject<HTMLTextAreaElement | null>, value: string) => {
     const el = ref.current;
@@ -141,40 +167,53 @@ export function ContentTabs({
           <div className="space-y-4">
             <div className="space-y-2">
               <Label>Platform Headline</Label>
-              <Input placeholder="e.g. Parent Education Platform" />
+              <Input placeholder="e.g. Parent Education Platform" value={homeHeadline} onChange={(e) => setHomeHeadline(e.target.value)} />
             </div>
             <div className="space-y-2">
               <Label>Platform Description</Label>
-              <Textarea placeholder="e.g. Understand your athlete's training with our educational module for parents." />
+              <Textarea placeholder="e.g. Understand your athlete's training with our educational module for parents." value={homeDescription} onChange={(e) => setHomeDescription(e.target.value)} />
             </div>
             <div className="space-y-2">
               <Label>Coach Welcome Message</Label>
-              <Textarea placeholder="e.g. Welcome back, [Name]! Learn what your child is learning in the gym this week." />
+              <Textarea placeholder="e.g. Welcome back, [Name]! Learn what your child is learning in the gym this week." value={homeWelcome} onChange={(e) => setHomeWelcome(e.target.value)} />
             </div>
             <div className="space-y-2">
               <Label>Intro Video URL</Label>
-              <Input placeholder="https://video" />
+              <Input placeholder="https://video" value={homeIntroVideo} onChange={(e) => setHomeIntroVideo(e.target.value)} />
             </div>
             <div className="space-y-2">
               <Label>Testimonials</Label>
-              <Textarea placeholder="Add testimonials..." />
+              <Textarea placeholder="Add testimonials..." value={homeTestimonials} onChange={(e) => setHomeTestimonials(e.target.value)} />
             </div>
           </div>
           <div className="space-y-4">
             <div className="space-y-2">
               <Label>Hero Image</Label>
-              <Input type="file" />
+              <Input placeholder="https://image" value={homeHeroImage} onChange={(e) => setHomeHeroImage(e.target.value)} />
             </div>
             <div className="space-y-2">
               <Label>Display Tier</Label>
-              <Select>
-                <option>All tiers</option>
-                <option>PHP Program</option>
-                <option>PHP Plus</option>
-                <option>PHP Premium</option>
+              <Select value={homeTier} onChange={(e) => setHomeTier(e.target.value)}>
+                <option value="all">All tiers</option>
+                <option value="PHP">PHP Program</option>
+                <option value="PHP_Plus">PHP Plus</option>
+                <option value="PHP_Premium">PHP Premium</option>
               </Select>
             </div>
-            <Button className="w-full" onClick={onSaveHome}>
+            <Button
+              className="w-full"
+              onClick={() =>
+                onSaveHome({
+                  headline: homeHeadline,
+                  description: homeDescription,
+                  welcome: homeWelcome,
+                  introVideoUrl: homeIntroVideo,
+                  testimonials: homeTestimonials,
+                  heroImageUrl: homeHeroImage,
+                  tier: homeTier,
+                })
+              }
+            >
               Save Updates
             </Button>
           </div>
@@ -185,11 +224,11 @@ export function ContentTabs({
           <div className="space-y-4">
             <div className="space-y-2">
               <Label>Article Title</Label>
-              <Input placeholder="New article title" />
+              <Input placeholder="New article title" value={parentTitle} onChange={(e) => setParentTitle(e.target.value)} />
             </div>
             <div className="space-y-2">
               <Label>Category</Label>
-              <Select>
+              <Select value={parentCategory} onChange={(e) => setParentCategory(e.target.value)}>
                 <option>Youth Strength Training 101</option>
                 <option>Benefits of Strength Training</option>
                 <option>Why We Warm Up</option>
@@ -202,23 +241,34 @@ export function ContentTabs({
             </div>
             <div className="space-y-2">
               <Label>Body</Label>
-              <Textarea placeholder="Write the article..." />
+              <Textarea placeholder="Write the article..." value={parentBody} onChange={(e) => setParentBody(e.target.value)} />
             </div>
           </div>
           <div className="space-y-4">
             <div className="space-y-2">
               <Label>Media</Label>
-              <Input type="file" />
+              <Input placeholder="https://media" value={parentMediaUrl} onChange={(e) => setParentMediaUrl(e.target.value)} />
             </div>
             <div className="space-y-2">
               <Label>Access Tier</Label>
-              <Select>
-                <option>PHP Plus & Premium</option>
-                <option>All tiers</option>
-                <option>Premium only</option>
+              <Select value={parentTier} onChange={(e) => setParentTier(e.target.value)}>
+                <option value="PHP_Plus">PHP Plus & Premium</option>
+                <option value="all">All tiers</option>
+                <option value="PHP_Premium">Premium only</option>
               </Select>
             </div>
-            <Button className="w-full" onClick={onPublishParent}>
+            <Button
+              className="w-full"
+              onClick={() =>
+                onPublishParent({
+                  title: parentTitle,
+                  category: parentCategory,
+                  body: parentBody,
+                  mediaUrl: parentMediaUrl,
+                  tier: parentTier,
+                })
+              }
+            >
               Publish Article
             </Button>
           </div>

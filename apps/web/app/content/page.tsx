@@ -14,6 +14,7 @@ export default function ContentPage() {
   const hasContent = true;
   const isLoading = false;
   const [activeDialog, setActiveDialog] = useState<ContentDialog>(null);
+  const [error, setError] = useState<string | null>(null);
   return (
     <AdminShell title="Content" subtitle="Manage every page in the mobile app.">
       <Card>
@@ -35,8 +36,49 @@ export default function ContentPage() {
             </div>
           ) : hasContent ? (
             <ContentTabs
-              onSaveHome={() => setActiveDialog("home")}
-              onPublishParent={() => setActiveDialog("parent")}
+              onSaveHome={async (data) => {
+                setError(null);
+                const payload = {
+                  title: "Home",
+                  content: data.headline,
+                  type: "article",
+                  body: JSON.stringify({
+                    description: data.description,
+                    welcome: data.welcome,
+                    introVideoUrl: data.introVideoUrl,
+                    testimonials: data.testimonials,
+                    heroImageUrl: data.heroImageUrl,
+                  }),
+                  surface: "home",
+                  programTier: data.tier === "all" ? undefined : data.tier,
+                };
+                const res = await fetch("/api/backend/content", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(payload),
+                });
+                if (!res.ok) setError("Failed to save home content");
+                else setActiveDialog("home");
+              }}
+              onPublishParent={async (data) => {
+                setError(null);
+                const payload = {
+                  title: data.title,
+                  content: data.body.slice(0, 140),
+                  type: "article",
+                  body: data.body,
+                  surface: "parent_platform",
+                  category: data.category,
+                  programTier: data.tier === "all" ? undefined : data.tier,
+                };
+                const res = await fetch("/api/backend/content", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(payload),
+                });
+                if (!res.ok) setError("Failed to publish parent article");
+                else setActiveDialog("parent");
+              }}
               onSavePrograms={() => setActiveDialog("programs")}
               onSaveLegal={() => setActiveDialog("legal")}
             />
@@ -50,6 +92,11 @@ export default function ContentPage() {
         </CardContent>
       </Card>
 
+      {error ? (
+        <div className="mt-4 rounded-2xl border border-border bg-secondary/40 p-3 text-sm text-red-500">
+          {error}
+        </div>
+      ) : null}
       <ContentDialogs active={activeDialog} onClose={() => setActiveDialog(null)} />
     </AdminShell>
   );
