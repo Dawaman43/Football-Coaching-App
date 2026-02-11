@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
@@ -160,9 +160,70 @@ const lineSeries = [20, 28, 35, 50, 48, 60, 66, 72, 80, 76, 84, 90];
 const lineLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun", "", "", "", "", ""];
 
 export default function Home() {
-  const hasKpis = kpis.length > 0;
-  const hasBookings = bookings.length > 0;
-  const isLoading = false;
+  const [dashboardKpis, setDashboardKpis] = useState(kpis);
+  const [todayBookings, setTodayBookings] = useState(bookings);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    async function load() {
+      setIsLoading(true);
+      try {
+        const [usersRes, bookingsRes, threadsRes] = await Promise.all([
+          fetch("/api/backend/admin/users"),
+          fetch("/api/backend/admin/bookings"),
+          fetch("/api/backend/admin/messages/threads"),
+        ]);
+
+        const users = usersRes.ok ? await usersRes.json() : { users: [] };
+        const bookingsData = bookingsRes.ok ? await bookingsRes.json() : { bookings: [] };
+        const threads = threadsRes.ok ? await threadsRes.json() : { threads: [] };
+
+        const totalUsers = users.users?.length ?? 0;
+        const unreadMessages = (threads.threads ?? []).reduce(
+          (sum: number, t: any) => sum + (t.unread ?? 0),
+          0
+        );
+
+        const today = new Date();
+        const todayStr = today.toDateString();
+        const todays = (bookingsData.bookings ?? []).filter((b: any) => {
+          if (!b.startsAt) return false;
+          return new Date(b.startsAt).toDateString() === todayStr;
+        });
+
+        const mappedBookings = todays.map((b: any) => ({
+          name: b.serviceName ?? b.type ?? "Session",
+          athlete: b.athleteName ?? "Athlete",
+          time: b.startsAt
+            ? new Date(b.startsAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+            : "--",
+          type: b.type ?? "Session",
+        }));
+
+        if (mounted) {
+          setDashboardKpis([
+            { label: "Total Athletes", value: String(totalUsers), delta: "Live" },
+            { label: "Premium Clients", value: "--", delta: "Tier data pending" },
+            { label: "Unread Messages", value: String(unreadMessages), delta: "Live" },
+            { label: "Bookings Today", value: String(todays.length), delta: "Live" },
+          ]);
+          if (mappedBookings.length) {
+            setTodayBookings(mappedBookings);
+          }
+        }
+      } finally {
+        if (mounted) setIsLoading(false);
+      }
+    }
+
+    load();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+  const hasKpis = dashboardKpis.length > 0;
+  const hasBookings = todayBookings.length > 0;
   const [activeDialog, setActiveDialog] = useState<DashboardDialog>(null);
   const [showCalendar, setShowCalendar] = useState(false);
   const [expandedQueue, setExpandedQueue] = useState(false);
@@ -208,7 +269,7 @@ export default function Home() {
         </section>
       ) : hasKpis ? (
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {kpis.map((kpi) => (
+          {dashboardKpis.map((kpi) => (
             <Card key={kpi.label} className="hover:border-primary/40">
               <CardHeader>
                 <CardDescription>{kpi.label}</CardDescription>
@@ -463,7 +524,7 @@ export default function Home() {
                 </div>
               ))
             ) : hasBookings ? (
-              bookings.map((booking) => (
+              todayBookings.map((booking) => (
                 <div
                   key={booking.name}
                   className="flex items-center justify-between rounded-2xl border border-border bg-secondary/40 px-4 py-3 text-sm transition hover:border-primary/40"
