@@ -5,7 +5,7 @@ export const apiSlice = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: "/api/backend",
   }),
-  tagTypes: ["Users", "Bookings", "Threads", "Content", "Services", "Dashboard"],
+  tagTypes: ["Users", "Bookings", "Threads", "Content", "Services", "Dashboard", "OnboardingConfig"],
   endpoints: (builder) => ({
     getAdminProfile: builder.query<any, void>({
       query: () => "/admin/profile",
@@ -38,6 +38,21 @@ export const apiSlice = createApi({
     getUsers: builder.query<{ users: any[] }, void>({
       query: () => "/admin/users",
       providesTags: ["Users"],
+    }),
+    blockUser: builder.mutation<any, { userId: number; blocked: boolean }>({
+      query: ({ userId, blocked }) => ({
+        url: `/admin/users/${userId}/block`,
+        method: "POST",
+        body: { blocked },
+      }),
+      invalidatesTags: ["Users"],
+    }),
+    deleteUser: builder.mutation<any, { userId: number }>({
+      query: ({ userId }) => ({
+        url: `/admin/users/${userId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Users"],
     }),
     getBookings: builder.query<{ bookings: any[] }, void>({
       query: () => "/admin/bookings",
@@ -105,6 +120,18 @@ export const apiSlice = createApi({
       }),
       invalidatesTags: ["Users"],
     }),
+    getOnboardingConfig: builder.query<{ config: any }, void>({
+      query: () => "/admin/onboarding-config",
+      providesTags: ["OnboardingConfig"],
+    }),
+    updateOnboardingConfig: builder.mutation<{ config: any }, any>({
+      query: (body) => ({
+        url: "/admin/onboarding-config",
+        method: "PUT",
+        body,
+      }),
+      invalidatesTags: ["OnboardingConfig"],
+    }),
   }),
 });
 
@@ -115,6 +142,8 @@ export const {
   useChangePasswordMutation,
   useGetDashboardQuery,
   useGetUsersQuery,
+  useBlockUserMutation,
+  useDeleteUserMutation,
   useGetBookingsQuery,
   useGetServicesQuery,
   useGetThreadsQuery,
@@ -126,4 +155,6 @@ export const {
   useGetUserOnboardingQuery,
   useUpdateProgramTierMutation,
   useAssignProgramMutation,
+  useGetOnboardingConfigQuery,
+  useUpdateOnboardingConfigMutation,
 } = apiSlice;

@@ -12,15 +12,20 @@ import { UsersCards } from "../../components/admin/users/users-cards";
 import { OnboardingQueue } from "../../components/admin/users/onboarding-queue";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardHeader } from "../../components/ui/card";
-import { useGetUsersQuery } from "../../lib/apiSlice";
+import { useBlockUserMutation, useDeleteUserMutation, useGetUsersQuery } from "../../lib/apiSlice";
 
 export default function UsersPage() {
   const { data: usersData, isLoading } = useGetUsersQuery();
+  const [blockUser] = useBlockUserMutation();
+  const [deleteUser] = useDeleteUserMutation();
+
   const users = useMemo(() => {
     const source = usersData?.users ?? [];
     return source.map((user: any) => ({
       id: user.id,
       name: user.name ?? user.email,
+      email: user.email,
+      isBlocked: Boolean(user.isBlocked),
       tier:
         user.role === "admin" || user.role === "superAdmin"
           ? "Admin"
@@ -29,7 +34,7 @@ export default function UsersPage() {
             : user.programTier === "PHP_Plus"
               ? "Plus"
               : "Program",
-      status: "Active",
+      status: user.isBlocked ? "Blocked" : "Active",
       lastActive: "Recently",
       onboarding: user.onboardingCompleted === false ? "Awaiting review" : "Complete",
     }));
@@ -38,6 +43,7 @@ export default function UsersPage() {
   const [activeDialog, setActiveDialog] = useState<UsersDialog>(null);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [activeChip, setActiveChip] = useState<string>("All");
+  const [actionError, setActionError] = useState<string | null>(null);
   const chips = ["All", "Premium", "Plus", "Program", "Pending"];
 
   const filteredUsers = useMemo(() => {
@@ -59,6 +65,11 @@ export default function UsersPage() {
       subtitle="Manage athletes, parents, and onboarding."
       actions={<Button onClick={() => setActiveDialog("new-user")}>New User</Button>}
     >
+      {actionError ? (
+        <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200">
+          {actionError}
+        </div>
+      ) : null}
       <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
         <Card>
           <CardHeader>
@@ -78,12 +89,48 @@ export default function UsersPage() {
                     setSelectedUserId(userId);
                     setActiveDialog("review-onboarding");
                   }}
+                  onToggleBlock={async (userId, blocked) => {
+                    setActionError(null);
+                    try {
+                      await blockUser({ userId, blocked }).unwrap();
+                    } catch (err: any) {
+                      setActionError(err?.data?.error || "Failed to update user status.");
+                    }
+                  }}
+                  onDelete={async (userId) => {
+                    const confirmed = window.confirm("Delete this user? This will remove them from the admin list.");
+                    if (!confirmed) return;
+                    setActionError(null);
+                    try {
+                      await deleteUser({ userId }).unwrap();
+                    } catch (err: any) {
+                      setActionError(err?.data?.error || "Failed to delete user.");
+                    }
+                  }}
                 />
                 <UsersCards
                   users={filteredUsers}
                   onSelect={(userId) => {
                     setSelectedUserId(userId);
                     setActiveDialog("review-onboarding");
+                  }}
+                  onToggleBlock={async (userId, blocked) => {
+                    setActionError(null);
+                    try {
+                      await blockUser({ userId, blocked }).unwrap();
+                    } catch (err: any) {
+                      setActionError(err?.data?.error || "Failed to update user status.");
+                    }
+                  }}
+                  onDelete={async (userId) => {
+                    const confirmed = window.confirm("Delete this user? This will remove them from the admin list.");
+                    if (!confirmed) return;
+                    setActionError(null);
+                    try {
+                      await deleteUser({ userId }).unwrap();
+                    } catch (err: any) {
+                      setActionError(err?.data?.error || "Failed to delete user.");
+                    }
                   }}
                 />
               </>

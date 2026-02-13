@@ -8,7 +8,10 @@ import {
   createExerciseItem,
   createProgram,
   createSessionItem,
+  blockUser,
+  deleteUser,
   getAdminProfileDetails,
+  getOnboardingConfigDetails,
   getOnboarding,
   listBookings,
   getDashboard,
@@ -19,6 +22,7 @@ import {
   updateAdminPreferencesDetails,
   updateAdminProfileDetails,
   updateProgramTier,
+  updateOnboardingConfigDetails,
 } from "../controllers/admin.controller";
 
 const router = Router();
@@ -26,10 +30,14 @@ const router = Router();
 router.use(requireAuth, requireRole(["coach", "admin", "superAdmin"]));
 
 router.get("/admin/users", listAllUsers);
+router.post("/admin/users/:userId/block", blockUser);
+router.delete("/admin/users/:userId", deleteUser);
 router.get("/admin/dashboard", getDashboard);
 router.get("/admin/profile", getAdminProfileDetails);
 router.put("/admin/profile", updateAdminProfileDetails);
 router.put("/admin/preferences", updateAdminPreferencesDetails);
+router.get("/admin/onboarding-config", getOnboardingConfigDetails);
+router.put("/admin/onboarding-config", updateOnboardingConfigDetails);
 router.get("/admin/bookings", listBookings);
 router.get("/admin/messages/threads", listMessageThreads);
 router.get("/admin/messages/:userId", listThreadMessages);

@@ -10,7 +10,7 @@ import * as z from "zod";
 import { useAppTheme } from "../theme/AppThemeProvider";
 import { apiRequest } from "../../lib/api";
 import { useAppDispatch } from "../../store/hooks";
-import { setCredentials } from "../../store/slices/userSlice";
+import { setCredentials, setOnboardingCompleted } from "../../store/slices/userSlice";
 
 const loginSchema = z.object({
   email: z.email("Please enter a valid email address"),
@@ -72,7 +72,13 @@ export default function LoginScreen() {
           },
         })
       );
-      router.replace("/(tabs)");
+      const onboarding = await apiRequest<{ athlete: { onboardingCompleted?: boolean } | null }>(
+        "/onboarding",
+        { token }
+      );
+      const completed = Boolean(onboarding.athlete?.onboardingCompleted);
+      dispatch(setOnboardingCompleted(completed));
+      router.replace(completed ? "/(tabs)" : "/(tabs)/onboarding");
     } catch (err: any) {
       const message = err?.message ?? "Login failed";
       if (message.toLowerCase().includes("not confirmed")) {

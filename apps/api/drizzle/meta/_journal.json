@@ -15,6 +15,27 @@
       "when": 1770945000000,
       "tag": "0001_admin_settings",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1770955000000,
+      "tag": "0002_user_block_delete",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1770965000000,
+      "tag": "0003_local_auth",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1770985000000,
+      "tag": "0004_onboarding_config",
+      "breakpoints": true
     }
   ]
 }

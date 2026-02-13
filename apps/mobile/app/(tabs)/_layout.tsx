@@ -4,6 +4,7 @@ import { useRole } from "@/context/RoleContext";
 import { Slot, usePathname, useRouter, useSegments } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { InteractionManager, Platform } from "react-native";
+import { useAppSelector } from "@/store/hooks";
 
 import HomeScreen from "./index";
 import MessagesScreen from "./messages";
@@ -33,6 +34,7 @@ const TAB_COMPONENTS: Record<string, React.ComponentType> = {
 export default function TabLayout() {
   const { colors } = useAppTheme();
   const { role } = useRole();
+  const { isAuthenticated, onboardingCompleted } = useAppSelector((state) => state.user);
   const router = useRouter();
   const pathname = usePathname();
   const segments = useSegments();
@@ -41,6 +43,13 @@ export default function TabLayout() {
   const isOnboarding =
     segments.some((segment) => segment === "onboarding") ||
     pathname.includes("/onboarding");
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    if (onboardingCompleted === false && !isOnboarding) {
+      router.replace("/(tabs)/onboarding");
+    }
+  }, [isAuthenticated, onboardingCompleted, isOnboarding, router]);
 
   const visibleTabs = useMemo(() => {
     if (role === "Athlete") {

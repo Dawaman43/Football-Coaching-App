@@ -21,8 +21,6 @@ export default defineConfig({
     user: username,
     password,
     database,
-    ssl: {
-      rejectUnauthorized: false,
-    },
+    ssl: process.env.DATABASE_SSL === "true" ? { rejectUnauthorized: false } : undefined,
   },
 });

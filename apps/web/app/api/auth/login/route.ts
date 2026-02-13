@@ -26,7 +26,9 @@ export async function POST(req: Request) {
   }
 
   const response = NextResponse.json({ ok: true });
-  const secure = process.env.NODE_ENV === "production";
+  const host = req.headers.get("host") ?? "";
+  const isLocalhost = host.includes("localhost") || host.startsWith("127.0.0.1");
+  const secure = process.env.NODE_ENV === "production" && !isLocalhost;
   response.cookies.set("accessToken", accessToken, {
     httpOnly: true,
     secure,

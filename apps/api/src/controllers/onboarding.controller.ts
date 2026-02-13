@@ -1,7 +1,11 @@
 import type { Request, Response } from "express";
 import { z } from "zod";
 
-import { getOnboardingByUser, submitOnboarding as submitOnboardingService } from "../services/onboarding.service";
+import {
+  getOnboardingByUser,
+  submitOnboarding as submitOnboardingService,
+  getPublicOnboardingConfig,
+} from "../services/onboarding.service";
 import { ProgramType } from "../db/schema";
 
 const onboardingSchema = z.object({
@@ -20,6 +24,7 @@ const onboardingSchema = z.object({
   termsVersion: z.string().min(1),
   privacyVersion: z.string().min(1),
   appVersion: z.string().min(1),
+  extraResponses: z.record(z.string(), z.any()).optional(),
 });
 
 export async function submitOnboarding(req: Request, res: Response) {
@@ -41,9 +46,15 @@ export async function submitOnboarding(req: Request, res: Response) {
     termsVersion: input.termsVersion,
     privacyVersion: input.privacyVersion,
     appVersion: input.appVersion,
+    extraResponses: input.extraResponses,
   });
 
   return res.status(200).json(result);
+}
+
+export async function getOnboardingConfig(_req: Request, res: Response) {
+  const config = await getPublicOnboardingConfig();
+  return res.status(200).json({ config });
 }
 
 export async function getOnboardingStatus(req: Request, res: Response) {

@@ -1,10 +1,32 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 import { db } from "../db";
 import { athleteTable, guardianTable, userTable } from "../db/schema";
 
 export async function getUserByCognitoSub(sub: string) {
-  const users = await db.select().from(userTable).where(eq(userTable.cognitoSub, sub)).limit(1);
+  const users = await db
+    .select()
+    .from(userTable)
+    .where(and(eq(userTable.cognitoSub, sub), eq(userTable.isDeleted, false)))
+    .limit(1);
+  return users[0] ?? null;
+}
+
+export async function getUserById(id: number) {
+  const users = await db
+    .select()
+    .from(userTable)
+    .where(and(eq(userTable.id, id), eq(userTable.isDeleted, false)))
+    .limit(1);
+  return users[0] ?? null;
+}
+
+export async function getUserByEmail(email: string) {
+  const users = await db
+    .select()
+    .from(userTable)
+    .where(and(eq(userTable.email, email), eq(userTable.isDeleted, false)))
+    .limit(1);
   return users[0] ?? null;
 }
 
@@ -12,6 +34,7 @@ export async function createUserFromCognito(input: {
   sub: string;
   email: string;
   name: string;
+  role?: "guardian" | "coach" | "admin" | "superAdmin";
 }) {
   const result = await db
     .insert(userTable)
@@ -19,6 +42,7 @@ export async function createUserFromCognito(input: {
       cognitoSub: input.sub,
       email: input.email,
       name: input.name,
+      role: input.role,
     })
     .returning();
 

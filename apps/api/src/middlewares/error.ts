@@ -11,5 +11,11 @@ export function errorHandler(err: unknown, _req: Request, res: Response, _next: 
     return res.status(status).json({ error: message });
   }
   console.error("Unhandled error", err);
+  if (process.env.NODE_ENV !== "production") {
+    return res.status(500).json({
+      error: "Internal server error",
+      details: typeof err === "object" && err ? err : String(err),
+    });
+  }
   return res.status(500).json({ error: "Internal server error" });
 }

@@ -1,7 +1,8 @@
 import type { NextFunction, Request, Response } from "express";
 
 import { verifyAccessToken } from "../lib/jwt";
-import { createUserFromCognito, getUserByCognitoSub } from "../services/user.service";
+import { env } from "../config/env";
+import { createUserFromCognito, getUserByCognitoSub, getUserById } from "../services/user.service";
 
 export async function requireAuth(req: Request, res: Response, next: NextFunction) {
   const header = req.headers.authorization;
@@ -15,19 +16,33 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
     const sub = payload.sub as string | undefined;
     const email = payload.email as string | undefined;
     const name = (payload.name as string | undefined) ?? email ?? "";
+    const userId = payload.user_id as number | undefined;
 
-    if (!sub) {
+    if (!sub && !userId) {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    let user = await getUserByCognitoSub(sub);
+    let user = userId ? await getUserById(Number(userId)) : await getUserByCognitoSub(sub!);
     if (!user) {
       if (!email) {
-        return res.status(401).json({ error: "Unauthorized" });
+        if (!env.allowJwtBypass) {
+          return res.status(401).json({ error: "Unauthorized" });
+        }
+        const fallbackEmail = `${sub}@local.dev`;
+        user = await createUserFromCognito({
+          sub: sub ?? `local:${Date.now()}`,
+          email: fallbackEmail,
+          name: name || "Local Admin",
+          role: "admin",
+        });
+      } else {
+        user = await createUserFromCognito({ sub: sub ?? `local:${Date.now()}`, email, name });
       }
-      user = await createUserFromCognito({ sub, email, name });
     }
 
+    if (user.isBlocked) {
+      return res.status(403).json({ error: "Account is blocked" });
+    }
     req.user = { id: user.id, role: user.role, email: user.email, name: user.name, sub: user.cognitoSub };
     next();
   } catch (err) {

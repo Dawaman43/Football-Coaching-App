@@ -5,11 +5,16 @@ import {
   confirmForgotPassword,
   confirmSignUp,
   changePassword,
+  confirmLocal,
   loginUser,
+  loginLocal,
   resendConfirmation as resendConfirmationCode,
+  resendLocal,
   signUpUser,
+  registerLocal,
   startForgotPassword,
 } from "../services/auth.service";
+import { env } from "../config/env";
 
 const registerSchema = z.object({
   email: z.string().email(),
@@ -48,6 +53,10 @@ const changePasswordSchema = z.object({
 
 export async function register(req: Request, res: Response) {
   const input = registerSchema.parse(req.body);
+  if (env.authMode === "local") {
+    await registerLocal(input);
+    return res.status(200).json({ ok: true });
+  }
   const response = await signUpUser(input);
   if ("alreadyExists" in response) {
     return res.status(200).json({ userSub: null, codeDelivery: response.CodeDeliveryDetails, alreadyExists: true });
@@ -57,18 +66,30 @@ export async function register(req: Request, res: Response) {
 
 export async function confirmRegistration(req: Request, res: Response) {
   const input = confirmSchema.parse(req.body);
+  if (env.authMode === "local") {
+    await confirmLocal(input);
+    return res.status(200).json({ ok: true });
+  }
   await confirmSignUp(input);
   return res.status(200).json({ ok: true });
 }
 
 export async function resendConfirmation(req: Request, res: Response) {
   const input = resendSchema.parse(req.body);
+  if (env.authMode === "local") {
+    await resendLocal(input);
+    return res.status(200).json({ ok: true });
+  }
   const response = await resendConfirmationCode(input);
   return res.status(200).json({ ok: true, codeDelivery: response.CodeDeliveryDetails });
 }
 
 export async function login(req: Request, res: Response) {
   const input = loginSchema.parse(req.body);
+  if (env.authMode === "local") {
+    const response = await loginLocal(input);
+    return res.status(200).json(response);
+  }
   const response = await loginUser(input);
   return res.status(200).json({
     accessToken: response.AuthenticationResult?.AccessToken,

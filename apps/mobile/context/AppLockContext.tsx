@@ -1,6 +1,7 @@
 import * as SecureStore from "expo-secure-store";
 import React, { createContext, ReactNode, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { AppState } from "react-native";
+import { useAppSelector } from "@/store/hooks";
 
 type AutoLockInterval = "Immediately" | "1 min" | "5 min" | "15 min" | "30 min";
 
@@ -39,6 +40,7 @@ function parseIntervalToMs(interval: AutoLockInterval): number {
 }
 
 export function AppLockProvider({ children }: { children: ReactNode }) {
+  const { isAuthenticated } = useAppSelector((state) => state.user);
   const [enabled, setEnabledState] = useState(false);
   const [pin, setPinState] = useState<string | null>(null);
   const [recoveryQuestion, setRecoveryQuestion] = useState<string | null>(null);
@@ -91,6 +93,19 @@ export function AppLockProvider({ children }: { children: ReactNode }) {
     });
     return () => subscription.remove();
   }, [enabled, pin, autoLockInterval]);
+
+  useEffect(() => {
+    if (isAuthenticated) return;
+    setEnabledState(false);
+    setPinState(null);
+    setRecoveryQuestion(null);
+    setRecoveryAnswer(null);
+    setIsLocked(false);
+    SecureStore.deleteItemAsync(STORAGE_KEYS.enabled);
+    SecureStore.deleteItemAsync(STORAGE_KEYS.pin);
+    SecureStore.deleteItemAsync(STORAGE_KEYS.question);
+    SecureStore.deleteItemAsync(STORAGE_KEYS.answer);
+  }, [isAuthenticated]);
 
   const setEnabled = async (value: boolean) => {
     setEnabledState(value);

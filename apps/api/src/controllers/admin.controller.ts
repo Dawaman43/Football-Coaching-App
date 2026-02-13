@@ -15,9 +15,13 @@ import {
   listThreadMessagesAdmin,
   sendMessageAdmin,
   listUsers,
+  setUserBlocked,
+  softDeleteUser,
   updateAdminPreferences,
   updateAdminProfile,
   updateAthleteProgramTier,
+  getOnboardingConfig,
+  updateOnboardingConfig,
 } from "../services/admin.service";
 import { ProgramType, sessionType } from "../db/schema";
 
@@ -82,9 +86,55 @@ const adminPreferencesSchema = z.object({
   workEndMinute: z.number().int().min(0).max(59),
 });
 
+const onboardingFieldSchema = z.object({
+  id: z.string().min(1),
+  label: z.string().min(1),
+  type: z.enum(["text", "number", "dropdown"]),
+  required: z.boolean(),
+  visible: z.boolean(),
+  options: z.array(z.string().min(1)).optional(),
+  optionsByTeam: z.record(z.array(z.string().min(1))).optional(),
+});
+
+const onboardingConfigSchema = z.object({
+  version: z.number().int().min(1),
+  fields: z.array(onboardingFieldSchema).min(1),
+  requiredDocuments: z.array(
+    z.object({
+      id: z.string().min(1),
+      label: z.string().min(1),
+      required: z.boolean(),
+    })
+  ),
+  welcomeMessage: z.string().optional().nullable(),
+  coachMessage: z.string().optional().nullable(),
+  defaultProgramTier: z.enum(ProgramType.enumValues),
+  approvalWorkflow: z.enum(["manual", "auto"]).default("manual"),
+  notes: z.string().optional().nullable(),
+});
+
 export async function listAllUsers(_req: Request, res: Response) {
   const users = await listUsers();
   return res.status(200).json({ users });
+}
+
+export async function blockUser(req: Request, res: Response) {
+  const userId = z.coerce.number().int().min(1).parse(req.params.userId);
+  const body = z.object({ blocked: z.boolean() }).parse(req.body);
+  const user = await setUserBlocked(userId, body.blocked);
+  if (!user) {
+    return res.status(404).json({ error: "User not found" });
+  }
+  return res.status(200).json({ user });
+}
+
+export async function deleteUser(req: Request, res: Response) {
+  const userId = z.coerce.number().int().min(1).parse(req.params.userId);
+  const user = await softDeleteUser(userId);
+  if (!user) {
+    return res.status(404).json({ error: "User not found" });
+  }
+  return res.status(200).json({ user });
 }
 
 export async function getOnboarding(req: Request, res: Response) {
@@ -117,6 +167,20 @@ export async function updateAdminPreferencesDetails(req: Request, res: Response)
   }
   const data = await updateAdminPreferences(req.user!.id, parsed.data);
   return res.status(200).json(data);
+}
+
+export async function getOnboardingConfigDetails(_req: Request, res: Response) {
+  const data = await getOnboardingConfig();
+  return res.status(200).json({ config: data });
+}
+
+export async function updateOnboardingConfigDetails(req: Request, res: Response) {
+  const parsed = onboardingConfigSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: "Invalid request", details: parsed.error.flatten().fieldErrors });
+  }
+  const data = await updateOnboardingConfig(req.user!.id, parsed.data);
+  return res.status(200).json({ config: data });
 }
 
 export async function updateProgramTier(req: Request, res: Response) {
