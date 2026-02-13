@@ -6,6 +6,7 @@ import { Button } from "../../ui/button";
 import { Input } from "../../ui/input";
 import { Select } from "../../ui/select";
 import { Textarea } from "../../ui/textarea";
+import { useCreateAvailabilityMutation, useCreateServiceMutation } from "../../../lib/apiSlice";
 
 export type BookingsDialog =
   | null
@@ -33,6 +34,8 @@ export function BookingsDialogs({ active, onClose, selectedBooking, services = [
   const [availabilityStart, setAvailabilityStart] = useState("");
   const [availabilityEnd, setAvailabilityEnd] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [createService, { isLoading: isCreatingService }] = useCreateServiceMutation();
+  const [createAvailability, { isLoading: isCreatingAvailability }] = useCreateAvailabilityMutation();
   return (
     <Dialog open={active !== null} onOpenChange={onClose}>
       <DialogContent>
@@ -76,25 +79,21 @@ export function BookingsDialogs({ active, onClose, selectedBooking, services = [
                   onClick={async () => {
                     setError(null);
                     try {
-                      const res = await fetch("/api/backend/bookings/services", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                          name: serviceName,
-                          type: serviceType,
-                          durationMinutes: Number(durationMinutes),
-                          capacity: capacity ? Number(capacity) : undefined,
-                          fixedStartTime: fixedStartTime || undefined,
-                          programTier: programTier || undefined,
-                        }),
-                      });
-                      if (!res.ok) throw new Error("Failed to create service");
+                      await createService({
+                        name: serviceName,
+                        type: serviceType,
+                        durationMinutes: Number(durationMinutes),
+                        capacity: capacity ? Number(capacity) : undefined,
+                        fixedStartTime: fixedStartTime || undefined,
+                        programTier: programTier || undefined,
+                      }).unwrap();
                       onRefresh?.();
                       onClose();
                     } catch (err: any) {
                       setError(err.message ?? "Failed to create service");
                     }
                   }}
+                  disabled={isCreatingService}
                 >
                   Create
                 </Button>
@@ -122,21 +121,17 @@ export function BookingsDialogs({ active, onClose, selectedBooking, services = [
                   onClick={async () => {
                     setError(null);
                     try {
-                      const res = await fetch("/api/backend/bookings/availability", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                          serviceTypeId: Number(availabilityServiceId),
-                          startsAt: new Date(availabilityStart).toISOString(),
-                          endsAt: new Date(availabilityEnd).toISOString(),
-                        }),
-                      });
-                      if (!res.ok) throw new Error("Failed to open slots");
+                      await createAvailability({
+                        serviceTypeId: Number(availabilityServiceId),
+                        startsAt: new Date(availabilityStart).toISOString(),
+                        endsAt: new Date(availabilityEnd).toISOString(),
+                      }).unwrap();
                       onClose();
                     } catch (err: any) {
                       setError(err.message ?? "Failed to open slots");
                     }
                   }}
+                  disabled={isCreatingAvailability}
                 >
                   Open Slots
                 </Button>

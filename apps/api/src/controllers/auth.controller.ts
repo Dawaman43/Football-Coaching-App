@@ -4,6 +4,7 @@ import { z } from "zod";
 import {
   confirmForgotPassword,
   confirmSignUp,
+  changePassword,
   loginUser,
   resendConfirmation as resendConfirmationCode,
   signUpUser,
@@ -40,9 +41,17 @@ const forgotConfirmSchema = z.object({
   password: z.string().min(8),
 });
 
+const changePasswordSchema = z.object({
+  oldPassword: z.string().min(8),
+  newPassword: z.string().min(8),
+});
+
 export async function register(req: Request, res: Response) {
   const input = registerSchema.parse(req.body);
   const response = await signUpUser(input);
+  if ("alreadyExists" in response) {
+    return res.status(200).json({ userSub: null, codeDelivery: response.CodeDeliveryDetails, alreadyExists: true });
+  }
   return res.status(201).json({ userSub: response.UserSub, codeDelivery: response.CodeDeliveryDetails });
 }
 
@@ -79,6 +88,24 @@ export async function startPasswordReset(req: Request, res: Response) {
 export async function confirmPasswordReset(req: Request, res: Response) {
   const input = forgotConfirmSchema.parse(req.body);
   await confirmForgotPassword(input);
+  return res.status(200).json({ ok: true });
+}
+
+export async function updatePassword(req: Request, res: Response) {
+  const input = changePasswordSchema.safeParse(req.body);
+  if (!input.success) {
+    return res.status(400).json({ error: "Invalid request", details: input.error.flatten().fieldErrors });
+  }
+  const header = req.headers.authorization ?? "";
+  const token = header.startsWith("Bearer ") ? header.replace("Bearer ", "") : "";
+  if (!token) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  await changePassword({
+    accessToken: token,
+    previousPassword: input.data.oldPassword,
+    proposedPassword: input.data.newPassword,
+  });
   return res.status(200).json({ ok: true });
 }
 

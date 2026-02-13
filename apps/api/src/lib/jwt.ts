@@ -13,10 +13,20 @@ export async function verifyAccessToken(token: string) {
     throw new Error("Cognito issuer not configured");
   }
 
-  const { payload } = await jwtVerify(token, jwks, {
-    issuer,
-    audience: env.cognitoClientId,
-  });
+  const { payload } = await jwtVerify(token, jwks, { issuer });
+
+  const tokenUse = payload.token_use as string | undefined;
+  if (tokenUse === "access") {
+    if (payload.client_id !== env.cognitoClientId) {
+      throw new Error("Invalid token");
+    }
+  } else if (tokenUse === "id") {
+    if (payload.aud !== env.cognitoClientId) {
+      throw new Error("Invalid token");
+    }
+  } else {
+    throw new Error("Invalid token");
+  }
 
   return payload;
 }

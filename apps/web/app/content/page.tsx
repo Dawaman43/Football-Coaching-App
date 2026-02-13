@@ -9,10 +9,11 @@ import { Card, CardContent, CardHeader } from "../../components/ui/card";
 import { Skeleton } from "../../components/ui/skeleton";
 import { ContentDialogs, type ContentDialog } from "../../components/admin/content/content-dialogs";
 import { ContentTabs } from "../../components/admin/content/content-tabs";
+import { useCreateContentMutation } from "../../lib/apiSlice";
 
 export default function ContentPage() {
-  const hasContent = true;
-  const isLoading = false;
+  const hasContent = false;
+  const [createContent, { isLoading }] = useCreateContentMutation();
   const [activeDialog, setActiveDialog] = useState<ContentDialog>(null);
   const [error, setError] = useState<string | null>(null);
   return (
@@ -52,13 +53,12 @@ export default function ContentPage() {
                   surface: "home",
                   programTier: data.tier === "all" ? undefined : data.tier,
                 };
-                const res = await fetch("/api/backend/content", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify(payload),
-                });
-                if (!res.ok) setError("Failed to save home content");
-                else setActiveDialog("home");
+                try {
+                  await createContent(payload).unwrap();
+                  setActiveDialog("home");
+                } catch (err) {
+                  setError("Failed to save home content");
+                }
               }}
               onPublishParent={async (data) => {
                 setError(null);
@@ -71,13 +71,12 @@ export default function ContentPage() {
                   category: data.category,
                   programTier: data.tier === "all" ? undefined : data.tier,
                 };
-                const res = await fetch("/api/backend/content", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify(payload),
-                });
-                if (!res.ok) setError("Failed to publish parent article");
-                else setActiveDialog("parent");
+                try {
+                  await createContent(payload).unwrap();
+                  setActiveDialog("parent");
+                } catch (err) {
+                  setError("Failed to publish parent article");
+                }
               }}
               onSavePrograms={() => setActiveDialog("programs")}
               onSaveLegal={() => setActiveDialog("legal")}

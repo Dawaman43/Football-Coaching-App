@@ -25,7 +25,7 @@ export function OnboardingQueue({ items, onReview, onAssign }: OnboardingQueuePr
     <div className="space-y-4">
       {items.map((user) => (
         <div
-          key={user.name}
+          key={user.id}
           className="rounded-2xl border border-border bg-secondary/40 p-4 text-sm"
         >
           <p className="font-semibold text-foreground">{user.name}</p>

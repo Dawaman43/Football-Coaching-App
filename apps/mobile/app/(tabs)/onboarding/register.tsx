@@ -11,6 +11,8 @@ import { Pressable, Text, TextInput, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as z from "zod";
+import { apiRequest } from "@/lib/api";
+import { useAppSelector } from "@/store/hooks";
 
 const athleteRegisterSchema = z.object({
   name: z.string().min(2, "Name is required"),
@@ -34,6 +36,9 @@ export default function RegisterScreen() {
   const { setRole } = useRole();
   const [showTerms, setShowTerms] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const { token, profile } = useAppSelector((state) => state.user);
 
   const {
     control,
@@ -55,13 +60,57 @@ export default function RegisterScreen() {
     mode: "onChange",
   });
 
-  const onSubmit = (data: AthleteRegisterFormData) => {
-    console.log("Athlete Registration submitted:", data);
-    setRole("Guardian");
+  const onSubmit = async (data: AthleteRegisterFormData) => {
+    setFormError(null);
+    if (!token) {
+      setFormError("Please log in again to complete onboarding.");
+      return;
+    }
+    if (!profile.email) {
+      setFormError("Missing guardian email.");
+      return;
+    }
+    const ageValue = Number.parseInt(data.age, 10);
+    const trainingValue = Math.round(Number(data.trainingDaysPerWeek));
+    if (Number.isNaN(ageValue) || ageValue < 5) {
+      setFormError("Age must be a whole number (5 or older).");
+      return;
+    }
+    if (Number.isNaN(trainingValue) || trainingValue < 0) {
+      setFormError("Training days must be a valid number.");
+      return;
+    }
+    setIsSubmitting(true);
     try {
+      await apiRequest("/onboarding", {
+        method: "POST",
+        token,
+        body: {
+          athleteName: data.name,
+          age: ageValue,
+          team: data.team,
+          trainingPerWeek: trainingValue,
+          injuries: data.injuries,
+          growthNotes: data.growthNotes || null,
+          performanceGoals: data.performanceGoals,
+          equipmentAccess: data.equipmentAccess,
+          parentEmail: profile.email,
+          parentPhone: undefined,
+          relationToAthlete: "Guardian",
+          desiredProgramType: "PHP",
+          termsVersion: "1.0",
+          privacyVersion: "1.0",
+          appVersion: "mobile-1.0",
+        },
+      });
+
+      setRole("Guardian");
       router.replace("/(tabs)");
-    } catch (error) {
-      console.error("Navigation error:", error);
+    } catch (error: any) {
+      console.error("Onboarding failed:", error);
+      setFormError(error?.message ?? "Onboarding failed");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -400,12 +449,18 @@ export default function RegisterScreen() {
 
         <Pressable
           onPress={handleSubmit(onSubmit, onError)}
-          className="bg-accent h-14 rounded-xl items-center justify-center mb-8 w-full"
+          className={`bg-accent h-14 rounded-xl items-center justify-center mb-8 w-full ${isSubmitting ? "opacity-70" : ""}`}
+          disabled={isSubmitting}
         >
           <Text className="text-white font-bold text-lg font-outfit">
-            Complete Registration
+            {isSubmitting ? "Saving..." : "Complete Registration"}
           </Text>
         </Pressable>
+        {formError ? (
+          <Text className="text-danger text-xs font-outfit mb-6">
+            {formError}
+          </Text>
+        ) : null}
       </KeyboardAwareScrollView>
 
       <LegalModal

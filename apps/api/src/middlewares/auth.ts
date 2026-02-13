@@ -16,18 +16,22 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
     const email = payload.email as string | undefined;
     const name = (payload.name as string | undefined) ?? email ?? "";
 
-    if (!sub || !email) {
+    if (!sub) {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
     let user = await getUserByCognitoSub(sub);
     if (!user) {
+      if (!email) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
       user = await createUserFromCognito({ sub, email, name });
     }
 
     req.user = { id: user.id, role: user.role, email: user.email, name: user.name, sub: user.cognitoSub };
     next();
-  } catch {
+  } catch (err) {
+    console.error("Auth failed", err);
     return res.status(401).json({ error: "Unauthorized" });
   }
 }

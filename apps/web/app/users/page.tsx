@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import { AdminShell } from "../../components/admin/shell";
 import { EmptyState } from "../../components/admin/empty-state";
@@ -12,77 +12,33 @@ import { UsersCards } from "../../components/admin/users/users-cards";
 import { OnboardingQueue } from "../../components/admin/users/onboarding-queue";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardHeader } from "../../components/ui/card";
-
-const fallbackUsers = [
-  {
-    id: 1,
-    name: "Ava Patterson",
-    tier: "Premium",
-    status: "Active",
-    lastActive: "Today",
-    onboarding: "Complete",
-  },
-  {
-    id: 2,
-    name: "Jordan Miles",
-    tier: "Plus",
-    status: "Active",
-    lastActive: "Yesterday",
-    onboarding: "Complete",
-  },
-  {
-    id: 3,
-    name: "Liam Rivers",
-    tier: "Plus",
-    status: "Pending",
-    lastActive: "2 days ago",
-    onboarding: "Awaiting review",
-  },
-  {
-    id: 4,
-    name: "Maya Chen",
-    tier: "Program",
-    status: "Active",
-    lastActive: "3 days ago",
-    onboarding: "Complete",
-  },
-];
+import { useGetUsersQuery } from "../../lib/apiSlice";
 
 export default function UsersPage() {
-  const [users, setUsers] = useState(fallbackUsers);
-  const [isLoading, setIsLoading] = useState(false);
+  const { data: usersData, isLoading } = useGetUsersQuery();
+  const users = useMemo(() => {
+    const source = usersData?.users ?? [];
+    return source.map((user: any) => ({
+      id: user.id,
+      name: user.name ?? user.email,
+      tier:
+        user.role === "admin" || user.role === "superAdmin"
+          ? "Admin"
+          : user.programTier === "PHP_Premium"
+            ? "Premium"
+            : user.programTier === "PHP_Plus"
+              ? "Plus"
+              : "Program",
+      status: "Active",
+      lastActive: "Recently",
+      onboarding: user.onboardingCompleted === false ? "Awaiting review" : "Complete",
+    }));
+  }, [usersData]);
   const hasUsers = users.length > 0;
   const [activeDialog, setActiveDialog] = useState<UsersDialog>(null);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [activeChip, setActiveChip] = useState<string>("All");
   const chips = ["All", "Premium", "Plus", "Program", "Pending"];
-
-  useEffect(() => {
-    let mounted = true;
-    async function load() {
-      setIsLoading(true);
-      try {
-        const res = await fetch("/api/backend/admin/users");
-        if (!res.ok) return;
-        const data = await res.json();
-        const mapped = (data.users ?? []).map((user: any) => ({
-          id: user.id,
-          name: user.name ?? user.email,
-          tier: user.role === "admin" || user.role === "superAdmin" ? "Admin" : "Program",
-          status: "Active",
-          lastActive: "Recently",
-          onboarding: "Complete",
-        }));
-        if (mounted && mapped.length) setUsers(mapped);
-      } finally {
-        if (mounted) setIsLoading(false);
-      }
-    }
-    load();
-    return () => {
-      mounted = false;
-    };
-  }, []);
 
   const filteredUsers = useMemo(() => {
     if (activeChip === "All") return users;
@@ -90,7 +46,7 @@ export default function UsersPage() {
       return users.filter((user) => user.onboarding !== "Complete");
     }
     return users.filter((user) => user.tier === activeChip);
-  }, [activeChip]);
+  }, [activeChip, users]);
 
   const onboardingQueue = useMemo(
     () => users.filter((user) => user.onboarding !== "Complete"),

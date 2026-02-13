@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
+import { skipToken } from "@reduxjs/toolkit/query";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../../ui/dialog";
 import { Button } from "../../ui/button";
 import { Input } from "../../ui/input";
 import { Select } from "../../ui/select";
 import { Textarea } from "../../ui/textarea";
+import { useAssignProgramMutation, useGetUserOnboardingQuery, useUpdateProgramTierMutation } from "../../../lib/apiSlice";
 
 export type UsersDialog =
   | null
@@ -20,24 +22,18 @@ type UsersDialogsProps = {
 };
 
 export function UsersDialogs({ active, onClose, selectedUserId }: UsersDialogsProps) {
-  const [onboarding, setOnboarding] = useState<any | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [programTier, setProgramTier] = useState("PHP");
+  const shouldFetch = Boolean(
+    selectedUserId && (active === "review-onboarding" || active === "assign-program")
+  );
+  const { data: onboarding, isFetching } = useGetUserOnboardingQuery(
+    shouldFetch ? selectedUserId! : skipToken
+  );
+  const [updateProgramTier, { isLoading: isUpdatingTier }] = useUpdateProgramTierMutation();
+  const [assignProgram, { isLoading: isAssigning }] = useAssignProgramMutation();
 
-  useEffect(() => {
-    let mounted = true;
-    async function load() {
-      if (!selectedUserId || (active !== "review-onboarding" && active !== "assign-program")) return;
-      const res = await fetch(`/api/backend/admin/users/${selectedUserId}/onboarding`);
-      if (!res.ok) return;
-      const data = await res.json();
-      if (mounted) setOnboarding(data);
-    }
-    load();
-    return () => {
-      mounted = false;
-    };
-  }, [selectedUserId, active]);
+  const athleteId = useMemo(() => onboarding?.athlete?.id, [onboarding]);
   return (
     <Dialog open={active !== null} onOpenChange={onClose}>
       <DialogContent>
@@ -72,6 +68,11 @@ export function UsersDialogs({ active, onClose, selectedUserId }: UsersDialogsPr
           ) : null}
           {active === "review-onboarding" ? (
             <div className="space-y-4">
+              {isFetching ? (
+                <div className="rounded-2xl border border-border bg-secondary/30 p-4 text-sm text-muted-foreground">
+                  Loading onboarding details...
+                </div>
+              ) : null}
               <div className="grid gap-3 rounded-2xl border border-border bg-secondary/20 p-4 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Age / Team:</span>
@@ -117,19 +118,17 @@ export function UsersDialogs({ active, onClose, selectedUserId }: UsersDialogsPr
                 </Button>
                 <Button
                   onClick={async () => {
-                    if (!selectedUserId) return;
+                    if (!selectedUserId || !athleteId) return;
                     setError(null);
-                    const res = await fetch(`/api/backend/admin/users/program-tier`, {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ athleteId: onboarding?.athlete?.id, programTier }),
-                    });
-                    if (!res.ok) {
+                    try {
+                      await updateProgramTier({ athleteId, programTier }).unwrap();
+                      onClose();
+                    } catch (err) {
                       setError("Failed to update tier");
                       return;
                     }
-                    onClose();
                   }}
+                  disabled={isUpdatingTier}
                 >
                   Finalize Review
                 </Button>
@@ -151,19 +150,17 @@ export function UsersDialogs({ active, onClose, selectedUserId }: UsersDialogsPr
                 </Button>
                 <Button
                   onClick={async () => {
-                    if (!selectedUserId) return;
+                    if (!selectedUserId || !athleteId) return;
                     setError(null);
-                    const res = await fetch(`/api/backend/admin/enrollments`, {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ athleteId: onboarding?.athlete?.id, programType: programTier }),
-                    });
-                    if (!res.ok) {
+                    try {
+                      await assignProgram({ athleteId, programType: programTier }).unwrap();
+                      onClose();
+                    } catch (err) {
                       setError("Failed to assign program");
                       return;
                     }
-                    onClose();
                   }}
+                  disabled={isAssigning}
                 >
                   Assign
                 </Button>

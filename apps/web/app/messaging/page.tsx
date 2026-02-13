@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { skipToken } from "@reduxjs/toolkit/query";
 
 import { AdminShell } from "../../components/admin/shell";
 import { SectionHeader } from "../../components/admin/section-header";
@@ -9,6 +10,7 @@ import { Card, CardContent, CardHeader } from "../../components/ui/card";
 import { InboxList } from "../../components/admin/messaging/inbox-list";
 import { ConversationPanel } from "../../components/admin/messaging/conversation-panel";
 import { MessageDialogs, type MessagingDialog } from "../../components/admin/messaging/message-dialogs";
+import { useGetMessagesQuery, useGetThreadsQuery, useSendMessageMutation } from "../../lib/apiSlice";
 
 type ThreadItem = {
   userId: number;
@@ -27,24 +29,24 @@ type MessageItem = {
   status?: "sent" | "delivered" | "read";
 };
 
-const fallbackThreads: ThreadItem[] = [
-  {
-    userId: 1,
-    name: "Ava Patterson",
-    preview: "Knee is sore after practice",
-    time: "2m",
-    priority: true,
-    unread: 2,
-    pinned: true,
-  },
-];
-
 export default function MessagingPage() {
   const [activeDialog, setActiveDialog] = useState<MessagingDialog>(null);
-  const [threads, setThreads] = useState<ThreadItem[]>(fallbackThreads);
-  const [selectedUserId, setSelectedUserId] = useState<number | null>(fallbackThreads[0]?.userId ?? null);
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [activeFilter, setActiveFilter] = useState<string>("All");
-  const [messages, setMessages] = useState<MessageItem[]>([]);
+  const { data: threadsData } = useGetThreadsQuery();
+  const [sendMessage, { isLoading: isSending }] = useSendMessageMutation();
+
+  const threads = useMemo<ThreadItem[]>(() => {
+    const source = threadsData?.threads ?? [];
+    return source.map((thread: any) => ({
+      userId: thread.userId,
+      name: thread.name,
+      preview: thread.preview ?? "",
+      time: thread.time ? new Date(thread.time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "",
+      priority: (thread.unread ?? 0) > 0,
+      unread: thread.unread ?? 0,
+    }));
+  }, [threadsData]);
 
   const selectedThread = useMemo(
     () => threads.find((thread) => thread.userId === selectedUserId) ?? null,
@@ -52,50 +54,26 @@ export default function MessagingPage() {
   );
 
   useEffect(() => {
-    let mounted = true;
-    async function loadThreads() {
-      const res = await fetch("/api/backend/admin/messages/threads");
-      if (!res.ok) return;
-      const data = await res.json();
-      const mapped = (data.threads ?? []).map((thread: any) => ({
-        userId: thread.userId,
-        name: thread.name,
-        preview: thread.preview ?? "",
-        time: thread.time ? new Date(thread.time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "",
-        priority: (thread.unread ?? 0) > 0,
-        unread: thread.unread ?? 0,
-      }));
-      if (mounted && mapped.length) {
-        setThreads(mapped);
-        if (!selectedUserId) setSelectedUserId(mapped[0].userId);
-      }
+    if (!selectedUserId && threads.length) {
+      setSelectedUserId(threads[0].userId);
     }
-    loadThreads();
-    return () => {
-      mounted = false;
-    };
-  }, [selectedUserId]);
+  }, [selectedUserId, threads]);
 
-  useEffect(() => {
-    let mounted = true;
-    async function loadMessages() {
-      if (!selectedUserId || !selectedThread) return;
-      const res = await fetch(`/api/backend/admin/messages/${selectedUserId}`);
-      if (!res.ok) return;
-      const data = await res.json();
-      const mapped = (data.messages ?? []).map((msg: any) => ({
-        author: msg.senderId === selectedUserId ? selectedThread.name : "Coach",
-        time: msg.createdAt ? new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "",
-        text: msg.content,
-        status: msg.read ? "read" : "delivered",
-      }));
-      if (mounted) setMessages(mapped);
-    }
-    loadMessages();
-    return () => {
-      mounted = false;
-    };
-  }, [selectedUserId, selectedThread]);
+  const {
+    data: messagesData,
+    refetch: refetchMessages,
+  } = useGetMessagesQuery(selectedUserId ?? skipToken);
+
+  const messages = useMemo<MessageItem[]>(() => {
+    if (!selectedThread) return [];
+    const source = messagesData?.messages ?? [];
+    return source.map((msg: any) => ({
+      author: msg.senderId === selectedUserId ? selectedThread.name : "Coach",
+      time: msg.createdAt ? new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "",
+      text: msg.content,
+      status: msg.read ? "read" : "delivered",
+    }));
+  }, [messagesData, selectedThread, selectedUserId]);
 
   const filteredThreads = useMemo(() => {
     if (activeFilter === "All") return threads;
@@ -107,7 +85,6 @@ export default function MessagingPage() {
     <AdminShell
       title="Messaging"
       subtitle="Priority inbox and coach responses."
-      actions={<Button onClick={() => setActiveDialog("new-message")}>New Message</Button>}
     >
       <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
         <Card className="h-full">
@@ -138,15 +115,9 @@ export default function MessagingPage() {
               profile={null}
               onSend={async (text) => {
                 if (!selectedUserId) return;
-                await fetch(`/api/backend/admin/messages/${selectedUserId}`, {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ content: text }),
-                });
-                setMessages((prev) => [
-                  ...prev,
-                  { author: "Coach", time: "Now", text, status: "sent" },
-                ]);
+                if (isSending) return;
+                await sendMessage({ userId: selectedUserId, content: text }).unwrap();
+                refetchMessages();
               }}
             />
           </CardContent>

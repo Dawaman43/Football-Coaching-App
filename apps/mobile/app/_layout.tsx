@@ -1,6 +1,8 @@
 import { RefreshProvider } from "@/context/RefreshContext";
 import { RoleProvider } from "@/context/RoleContext";
+import { AppLockProvider } from "@/context/AppLockContext";
 import { ReduxProvider } from "@/store/Provider";
+import { AuthPersist } from "@/store/AuthPersist";
 import { DarkTheme, DefaultTheme } from "@react-navigation/native";
 import { SplashScreen, Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -9,6 +11,7 @@ import React, { useEffect, useState } from "react";
 import { LogBox, Platform, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { AppLockGate } from "@/components/AppLockGate";
 import "./global.css";
 import useLoadFonts from "./hooks/useLoadFonts";
 import AppThemeProvider from "./theme/AppThemeProvider";
@@ -82,18 +85,22 @@ export default function RootLayout() {
       <ReduxProvider>
         <SafeAreaProvider>
           <RoleProvider>
-            <AppThemeProvider>
-              <RefreshProvider>
-                <GlobalRefreshLayout>
+            <AppLockProvider>
+              <AppThemeProvider>
+                <RefreshProvider>
+                  <GlobalRefreshLayout>
                   <Stack
                     screenOptions={{ headerShown: false, animation: "none" }}
                   />
                   <StatusBar
                     style={colorScheme === "dark" ? "light" : "dark"}
                   />
+                  <AppLockGate />
+                  <AuthPersist />
                 </GlobalRefreshLayout>
-              </RefreshProvider>
-            </AppThemeProvider>
+                </RefreshProvider>
+              </AppThemeProvider>
+            </AppLockProvider>
           </RoleProvider>
         </SafeAreaProvider>
       </ReduxProvider>

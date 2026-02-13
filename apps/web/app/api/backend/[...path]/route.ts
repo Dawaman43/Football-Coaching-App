@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const apiBase = process.env.API_BASE_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
+const rawBase = process.env.API_BASE_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
+const apiBase = rawBase.replace(/\/api\/?$/, "");
 
 async function forward(req: NextRequest) {
   if (!apiBase) {
@@ -10,7 +11,7 @@ async function forward(req: NextRequest) {
 
   const url = new URL(req.url);
   const path = url.pathname.replace("/api/backend", "");
-  const target = `${apiBase}${path}${url.search}`;
+  const target = `${apiBase}/api${path}${url.search}`;
 
   const accessToken = req.cookies.get("accessToken")?.value;
 

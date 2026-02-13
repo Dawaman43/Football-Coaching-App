@@ -20,7 +20,7 @@ export function UsersCards({ users, onSelect }: UsersCardsProps) {
       {users.map((user) => (
         <button
           type="button"
-          key={user.name}
+          key={user.id}
           className="w-full rounded-2xl border border-border bg-secondary/40 p-4 text-left text-sm"
           onClick={() => onSelect(user.id)}
         >

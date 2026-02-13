@@ -38,7 +38,7 @@ export function UsersTable({ users, onSelect }: UsersTableProps) {
         <TableBody>
           {users.map((user) => (
             <TableRow
-              key={user.name}
+              key={user.id}
               className="hover:bg-secondary/60"
               onClick={() => onSelect(user.id)}
             >

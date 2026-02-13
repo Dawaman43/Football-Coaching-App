@@ -1,4 +1,14 @@
-import { boolean, date, integer, jsonb, pgEnum, pgTable, timestamp, varchar } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  date,
+  integer,
+  jsonb,
+  pgEnum,
+  pgTable,
+  timestamp,
+  uniqueIndex,
+  varchar,
+} from "drizzle-orm/pg-core";
 
 export const Role = pgEnum("role", ["guardian", "coach", "admin", "superAdmin"]);
 export const ProgramType = pgEnum("program_type", ["PHP", "PHP_Plus", "PHP_Premium"]);
@@ -33,6 +43,27 @@ export const userTable = pgTable("users", {
   updatedAt: timestamp().notNull().defaultNow(),
 
 });
+
+export const adminSettingsTable = pgTable(
+  "admin_settings",
+  {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    userId: integer().notNull().references(() => userTable.id),
+    title: varchar({ length: 255 }),
+    bio: varchar({ length: 500 }),
+    timezone: varchar({ length: 100 }).notNull().default("Europe/London"),
+    notificationSummary: varchar({ length: 32 }).notNull().default("Weekly"),
+    workStartHour: integer().notNull().default(8),
+    workStartMinute: integer().notNull().default(0),
+    workEndHour: integer().notNull().default(18),
+    workEndMinute: integer().notNull().default(0),
+    createdAt: timestamp().notNull().defaultNow(),
+    updatedAt: timestamp().notNull().defaultNow(),
+  },
+  (table) => ({
+    userIdUnique: uniqueIndex("admin_settings_user_id_unique").on(table.userId),
+  })
+);
 export const guardianTable = pgTable("guardians", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   userId: integer().notNull().references(() => userTable.id),

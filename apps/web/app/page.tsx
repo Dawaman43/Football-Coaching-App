@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
@@ -27,57 +27,7 @@ import { ActionDialogs, type DashboardDialog } from "../components/admin/dashboa
 import { CalendarPanel } from "../components/admin/dashboard/calendar-panel";
 import { PriorityQueue } from "../components/admin/dashboard/priority-queue";
 import { QuickActions } from "../components/admin/dashboard/quick-actions";
-
-const kpis = [
-  { label: "Total Athletes", value: "214", delta: "+12 this week" },
-  { label: "Premium Clients", value: "18", delta: "3 awaiting review" },
-  { label: "Unread Messages", value: "27", delta: "9 priority" },
-  { label: "Bookings Today", value: "6", delta: "2 1:1 sessions" },
-];
-
-const queue = [
-  {
-    title: "Video Review",
-    detail: "Miles T. • Technique assessment",
-    status: "Priority Feedback",
-  },
-  {
-    title: "Onboarding Review",
-    detail: "Liam R. • PHP Plus application",
-    status: "Assign Program",
-  },
-  {
-    title: "Priority Message",
-    detail: "Ava P. • Injury update",
-    status: "Reply Needed",
-  },
-  {
-    title: "Content Draft",
-    detail: "Growth & Maturation article",
-    status: "Ready to Publish",
-  },
-];
-
-const bookings = [
-  {
-    name: "Role Model Meeting",
-    athlete: "Jordan M.",
-    time: "13:00",
-    type: "Video",
-  },
-  {
-    name: "Lift Lab 1:1",
-    athlete: "Kayla D.",
-    time: "15:30",
-    type: "In-person",
-  },
-  {
-    name: "Group Call",
-    athlete: "PHP Plus Cohort",
-    time: "18:00",
-    type: "Video",
-  },
-];
+import { useGetDashboardQuery } from "../lib/apiSlice";
 
 const quickActions = [
   "Create program template",
@@ -86,173 +36,144 @@ const quickActions = [
   "Open booking slots",
 ];
 
-const trendCards = [
-  {
-    title: "Weekly Training Load",
-    value: "86%",
-    change: "+8%",
-    series: [30, 40, 36, 55, 62, 58, 72, 80, 88, 86],
-  },
-  {
-    title: "Messaging Response Rate",
-    value: "94%",
-    change: "+3%",
-    series: [70, 74, 78, 80, 82, 88, 91, 93, 94, 94],
-  },
-  {
-    title: "Bookings Utilization",
-    value: "78%",
-    change: "+11%",
-    series: [20, 28, 32, 40, 44, 50, 58, 65, 72, 78],
-  },
-];
-
-const highlights = [
-  { label: "New Onboardings", value: "12", detail: "7 pending review" },
-  { label: "Videos Uploaded", value: "18", detail: "4 priority" },
-  { label: "Content Updates", value: "9", detail: "2 scheduled" },
-  { label: "Physio Referrals", value: "5", detail: "3 redeemed" },
-];
-
-const volumeBars = [20, 28, 26, 32, 45, 38, 52, 60, 55, 62, 70, 64];
-
-const topAthletes = [
-  { name: "Ava Patterson", tier: "Premium", score: "High engagement" },
-  { name: "Miles Turner", tier: "Premium", score: "Video review pending" },
-  { name: "Kayla Davis", tier: "Plus", score: "Booking cadence steady" },
-  { name: "Jordan Miles", tier: "Program", score: "Program week 4" },
-];
-
-const tierDistribution = [
-  { label: "Program", value: 120, color: "hsl(142 20% 40%)" },
-  { label: "Plus", value: 76, color: "hsl(142 45% 45%)" },
-  { label: "Premium", value: 18, color: "hsl(142 71% 45%)" },
-];
-
-const stackedActivity = [
-  {
-    label: "Messages",
-    segments: [
-      { value: 40, color: "hsl(142 71% 45%)" },
-      { value: 30, color: "hsl(142 45% 45%)" },
-      { value: 18, color: "hsl(142 20% 40%)" },
-    ],
-  },
-  {
-    label: "Bookings",
-    segments: [
-      { value: 18, color: "hsl(142 71% 45%)" },
-      { value: 10, color: "hsl(142 45% 45%)" },
-      { value: 6, color: "hsl(142 20% 40%)" },
-    ],
-  },
-  {
-    label: "Uploads",
-    segments: [
-      { value: 10, color: "hsl(142 71% 45%)" },
-      { value: 6, color: "hsl(142 45% 45%)" },
-      { value: 4, color: "hsl(142 20% 40%)" },
-    ],
-  },
-];
-
 const lineSeries = [20, 28, 35, 50, 48, 60, 66, 72, 80, 76, 84, 90];
 const lineLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun", "", "", "", "", ""];
 
 export default function Home() {
-  const [dashboardKpis, setDashboardKpis] = useState(kpis);
-  const [todayBookings, setTodayBookings] = useState(bookings);
-  const [isLoading, setIsLoading] = useState(false);
+  const { data: dashboardData, isLoading } = useGetDashboardQuery();
 
-  useEffect(() => {
-    let mounted = true;
-    async function load() {
-      setIsLoading(true);
-      try {
-        const [usersRes, bookingsRes, threadsRes] = await Promise.all([
-          fetch("/api/backend/admin/users"),
-          fetch("/api/backend/admin/bookings"),
-          fetch("/api/backend/admin/messages/threads"),
-        ]);
-
-        const users = usersRes.ok ? await usersRes.json() : { users: [] };
-        const bookingsData = bookingsRes.ok ? await bookingsRes.json() : { bookings: [] };
-        const threads = threadsRes.ok ? await threadsRes.json() : { threads: [] };
-
-        const totalUsers = users.users?.length ?? 0;
-        const unreadMessages = (threads.threads ?? []).reduce(
-          (sum: number, t: any) => sum + (t.unread ?? 0),
-          0
-        );
-
-        const today = new Date();
-        const todayStr = today.toDateString();
-        const todays = (bookingsData.bookings ?? []).filter((b: any) => {
-          if (!b.startsAt) return false;
-          return new Date(b.startsAt).toDateString() === todayStr;
-        });
-
-        const mappedBookings = todays.map((b: any) => ({
-          name: b.serviceName ?? b.type ?? "Session",
-          athlete: b.athleteName ?? "Athlete",
-          time: b.startsAt
-            ? new Date(b.startsAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-            : "--",
-          type: b.type ?? "Session",
-        }));
-
-        if (mounted) {
-          setDashboardKpis([
-            { label: "Total Athletes", value: String(totalUsers), delta: "Live" },
-            { label: "Premium Clients", value: "--", delta: "Tier data pending" },
-            { label: "Unread Messages", value: String(unreadMessages), delta: "Live" },
-            { label: "Bookings Today", value: String(todays.length), delta: "Live" },
-          ]);
-          if (mappedBookings.length) {
-            setTodayBookings(mappedBookings);
-          }
-        }
-      } finally {
-        if (mounted) setIsLoading(false);
-      }
-    }
-
-    load();
-    return () => {
-      mounted = false;
-    };
+  const todayLabel = useMemo(() => {
+    const now = new Date();
+    return now.toLocaleDateString("en-US", { weekday: "long", day: "numeric", month: "short" });
   }, []);
+
+  const { dashboardKpis, todayBookings } = useMemo(() => {
+    const kpiData = dashboardData?.kpis;
+    const mappedBookings = (dashboardData?.bookingsToday ?? []).map((b: any) => ({
+      name: b.serviceName ?? b.type ?? "Session",
+      athlete: b.athleteName ?? "Athlete",
+      time: b.startsAt
+        ? new Date(b.startsAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+        : "--",
+      type: b.type ?? "Session",
+    }));
+
+    return {
+      dashboardKpis: [
+        { label: "Total Athletes", value: kpiData ? String(kpiData.totalAthletes) : "--", delta: "Live" },
+        { label: "Premium Clients", value: kpiData ? String(kpiData.premiumClients) : "--", delta: "Live" },
+        { label: "Unread Messages", value: kpiData ? String(kpiData.unreadMessages) : "--", delta: "Live" },
+        { label: "Bookings Today", value: kpiData ? String(kpiData.bookingsToday) : "--", delta: "Live" },
+      ],
+      todayBookings: mappedBookings,
+    };
+  }, [dashboardData]);
+
   const hasKpis = dashboardKpis.length > 0;
   const hasBookings = todayBookings.length > 0;
   const [activeDialog, setActiveDialog] = useState<DashboardDialog>(null);
   const [showCalendar, setShowCalendar] = useState(false);
   const [expandedQueue, setExpandedQueue] = useState(false);
-  const queueItems = useMemo(
-    () =>
-      expandedQueue
-        ? [
-            ...queue,
-            {
-              title: "Booking Request",
-              detail: "Parent call • availability confirmation",
-              status: "Confirm",
-            },
-            {
-              title: "Program Update",
-              detail: "Week 4 adjustments • PHP Program",
-              status: "Review",
-            },
-          ]
-        : queue,
-    [expandedQueue]
-  );
+  const queueItems = useMemo(() => {
+    const source = dashboardData?.priorityQueue ?? [];
+    if (!expandedQueue) return source;
+    return [
+      ...source,
+      {
+        title: "Booking Request",
+        detail: "Parent call • availability confirmation",
+        status: "Confirm",
+      },
+      {
+        title: "Program Update",
+        detail: "Week 4 adjustments • PHP Program",
+        status: "Review",
+      },
+    ];
+  }, [dashboardData, expandedQueue]);
 
-  const actions = (
-    <Button onClick={() => setActiveDialog("message")}>New Message</Button>
-  );
+  const trendCardsData = useMemo(() => {
+    if (!dashboardData?.trends) return [];
+    const trends = dashboardData.trends;
+    return [
+      {
+        title: "Weekly Training Load",
+        value: `${trends.trainingLoad}%`,
+        change: "Last 7 days",
+        series: trends.trainingSeries ?? [],
+      },
+      {
+        title: "Messaging Response Rate",
+        value: `${trends.messagingResponseRate}%`,
+        change: "Last 7 days",
+        series: trends.messagingSeries ?? [],
+      },
+      {
+        title: "Bookings Utilization",
+        value: `${trends.bookingsUtilization}%`,
+        change: "Last 7 days",
+        series: trends.bookingSeries ?? [],
+      },
+    ];
+  }, [dashboardData]);
+
+  const volumeBarsData = dashboardData?.weeklyVolume?.bars ?? [];
+
+  const weeklyTotals = dashboardData?.weeklyVolume?.totals ?? {
+    messages: 0,
+    bookings: 0,
+    uploads: 0,
+  };
+
+  const topAthletesData = useMemo(() => {
+    if (!dashboardData?.topAthletes?.length) return [];
+    return dashboardData.topAthletes.map((athlete: any) => ({
+      name: athlete.name,
+      tier: athlete.tier === "PHP_Premium" ? "Premium" : athlete.tier === "PHP_Plus" ? "Plus" : "Program",
+      score: athlete.score,
+    }));
+  }, [dashboardData]);
+
+  const tierSummary = dashboardData?.tierDistribution;
+  const tierDistributionData = tierSummary
+    ? [
+        { label: "Program", value: tierSummary.program, color: "hsl(142 20% 40%)" },
+        { label: "Plus", value: tierSummary.plus, color: "hsl(142 45% 45%)" },
+        { label: "Premium", value: tierSummary.premium, color: "hsl(142 71% 45%)" },
+      ]
+    : [];
+
+  const tierTotal = tierSummary?.total ?? tierDistributionData.reduce((sum, item) => sum + item.value, 0);
+  const tierRatios = tierTotal
+    ? tierDistributionData.map((item) => item.value / tierTotal)
+    : [0.5, 0.3, 0.2];
+
+  const activityMixData = useMemo(() => {
+    const totalMessages = weeklyTotals.messages;
+    const totalBookings = weeklyTotals.bookings;
+    const totalUploads = weeklyTotals.uploads;
+    const colors = ["hsl(142 71% 45%)", "hsl(142 45% 45%)", "hsl(142 20% 40%)"];
+    const toSegments = (total: number) =>
+      tierRatios.map((ratio, index) => ({
+        value: Math.round(total * ratio),
+        color: colors[index],
+      }));
+    return [
+      { label: "Messages", segments: toSegments(totalMessages) },
+      { label: "Bookings", segments: toSegments(totalBookings) },
+      { label: "Uploads", segments: toSegments(totalUploads) },
+    ];
+  }, [tierRatios, weeklyTotals]);
+
+  const weeklyProgressData = dashboardData?.weeklyProgress?.series ?? [];
+  const weeklyLabels = dashboardData?.weeklyProgress?.labels ?? [];
+
+  const highlightsData = dashboardData?.highlights ?? [];
+
+  const programOpsData = dashboardData?.programOps ?? [];
 
   return (
-    <AdminShell title="Coach Control Center" subtitle="Friday, 6 Feb" actions={actions}>
+    <AdminShell title="Coach Control Center" subtitle={todayLabel}>
       {isLoading ? (
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {Array.from({ length: 4 }).map((_, index) => (
@@ -335,7 +256,7 @@ export default function Home() {
                   Premium coverage
                 </p>
                 <p className="text-sm text-foreground">
-                  5 priority threads need response within 2 hours.
+                  {dashboardData?.priorityMessageCount ?? 0} priority threads need response.
                 </p>
               </>
             )}
@@ -344,21 +265,29 @@ export default function Home() {
       </section>
 
       <section className="grid gap-6 lg:grid-cols-3">
-        {trendCards.map((card) => (
-          <Card key={card.title} className="hover:border-primary/40">
-            <CardHeader>
-              <CardDescription>{card.title}</CardDescription>
-              <CardTitle className="text-3xl">{card.value}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>Last 10 days</span>
-                <Badge variant="accent">{card.change}</Badge>
-              </div>
-              <Sparkline values={card.series} className="text-primary" />
+        {trendCardsData.length ? (
+          trendCardsData.map((card) => (
+            <Card key={card.title} className="hover:border-primary/40">
+              <CardHeader>
+                <CardDescription>{card.title}</CardDescription>
+                <CardTitle className="text-3xl">{card.value}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>Last 7 days</span>
+                  <Badge variant="accent">{card.change}</Badge>
+                </div>
+                <Sparkline values={card.series} className="text-primary" />
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+          <Card className="col-span-full">
+            <CardContent>
+              <EmptyState title="No trend data yet" description="Metrics will appear after activity begins." />
             </CardContent>
           </Card>
-        ))}
+        )}
       </section>
 
       <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
@@ -370,21 +299,27 @@ export default function Home() {
             />
           </CardHeader>
           <CardContent className="space-y-4">
-            <MiniBars values={volumeBars} />
-            <div className="grid gap-3 sm:grid-cols-3">
-              <div className="rounded-2xl border border-border bg-secondary/40 p-3 text-sm">
-                <p className="text-xs text-muted-foreground">Messages</p>
-                <p className="mt-2 text-lg font-semibold text-foreground">128</p>
-              </div>
-              <div className="rounded-2xl border border-border bg-secondary/40 p-3 text-sm">
-                <p className="text-xs text-muted-foreground">Bookings</p>
-                <p className="mt-2 text-lg font-semibold text-foreground">24</p>
-              </div>
-              <div className="rounded-2xl border border-border bg-secondary/40 p-3 text-sm">
-                <p className="text-xs text-muted-foreground">Uploads</p>
-                <p className="mt-2 text-lg font-semibold text-foreground">19</p>
-              </div>
-            </div>
+            {volumeBarsData.length ? (
+              <>
+                <MiniBars values={volumeBarsData} />
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="rounded-2xl border border-border bg-secondary/40 p-3 text-sm">
+                    <p className="text-xs text-muted-foreground">Messages</p>
+                    <p className="mt-2 text-lg font-semibold text-foreground">{weeklyTotals.messages}</p>
+                  </div>
+                  <div className="rounded-2xl border border-border bg-secondary/40 p-3 text-sm">
+                    <p className="text-xs text-muted-foreground">Bookings</p>
+                    <p className="mt-2 text-lg font-semibold text-foreground">{weeklyTotals.bookings}</p>
+                  </div>
+                  <div className="rounded-2xl border border-border bg-secondary/40 p-3 text-sm">
+                    <p className="text-xs text-muted-foreground">Uploads</p>
+                    <p className="mt-2 text-lg font-semibold text-foreground">{weeklyTotals.uploads}</p>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <EmptyState title="No weekly volume yet" description="Activity totals will appear once sessions begin." />
+            )}
           </CardContent>
         </Card>
 
@@ -396,22 +331,26 @@ export default function Home() {
             />
           </CardHeader>
           <CardContent className="space-y-3">
-            {topAthletes.map((athlete) => (
-              <div
-                key={athlete.name}
-                className="flex items-center justify-between rounded-2xl border border-border bg-secondary/40 px-4 py-3 text-sm"
-              >
-                <div>
-                  <p className="font-semibold text-foreground">{athlete.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {athlete.score}
-                  </p>
+            {topAthletesData.length ? (
+              topAthletesData.map((athlete) => (
+                <div
+                  key={athlete.name}
+                  className="flex items-center justify-between rounded-2xl border border-border bg-secondary/40 px-4 py-3 text-sm"
+                >
+                  <div>
+                    <p className="font-semibold text-foreground">{athlete.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {athlete.score}
+                    </p>
+                  </div>
+                  <Badge variant={athlete.tier === "Premium" ? "primary" : "default"}>
+                    {athlete.tier}
+                  </Badge>
                 </div>
-                <Badge variant={athlete.tier === "Premium" ? "primary" : "default"}>
-                  {athlete.tier}
-                </Badge>
-              </div>
-            ))}
+              ))
+            ) : (
+              <EmptyState title="No athlete activity yet" description="Top athletes will appear after bookings and messaging." />
+            )}
           </CardContent>
         </Card>
       </section>
@@ -425,23 +364,29 @@ export default function Home() {
             />
           </CardHeader>
           <CardContent className="flex flex-col items-center gap-6 sm:flex-row sm:items-center">
-            <DonutChart segments={tierDistribution} centerLabel="214" />
-            <div className="space-y-3 text-sm">
-              {tierDistribution.map((tier) => (
-                <div key={tier.label} className="flex items-center gap-3">
-                  <span
-                    className="h-3 w-3 rounded-full"
-                    style={{ backgroundColor: tier.color }}
-                  />
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-foreground">
-                      {tier.label}
-                    </span>
-                    <span className="text-muted-foreground">{tier.value}</span>
-                  </div>
+            {tierDistributionData.length ? (
+              <>
+                <DonutChart segments={tierDistributionData} centerLabel={String(tierTotal)} />
+                <div className="space-y-3 text-sm">
+                  {tierDistributionData.map((tier) => (
+                    <div key={tier.label} className="flex items-center gap-3">
+                      <span
+                        className="h-3 w-3 rounded-full"
+                        style={{ backgroundColor: tier.color }}
+                      />
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-foreground">
+                          {tier.label}
+                        </span>
+                        <span className="text-muted-foreground">{tier.value}</span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </>
+            ) : (
+              <EmptyState title="No tier data yet" description="Tier distribution will appear after onboarding." />
+            )}
           </CardContent>
         </Card>
 
@@ -453,7 +398,11 @@ export default function Home() {
             />
           </CardHeader>
           <CardContent>
-            <StackedBars stacks={stackedActivity} />
+            {activityMixData.length ? (
+              <StackedBars stacks={activityMixData} />
+            ) : (
+              <EmptyState title="No activity mix yet" description="Activity ratios will appear after engagement." />
+            )}
           </CardContent>
         </Card>
       </section>
@@ -467,7 +416,11 @@ export default function Home() {
             />
           </CardHeader>
           <CardContent>
-            <LineChart values={lineSeries} labels={lineLabels} />
+            {weeklyProgressData.length ? (
+              <LineChart values={weeklyProgressData} labels={weeklyLabels} />
+            ) : (
+              <EmptyState title="No weekly progress yet" description="Engagement trends will show once activity starts." />
+            )}
           </CardContent>
         </Card>
         <Card>
@@ -564,28 +517,16 @@ export default function Home() {
             />
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="rounded-2xl border border-border bg-secondary/40 p-4 text-sm">
-              <p className="font-semibold text-foreground">PHP Plus Template</p>
-              <p className="text-xs text-muted-foreground">
-                Week 3 session balance review needed.
-              </p>
-            </div>
-            <div className="rounded-2xl border border-border bg-secondary/40 p-4 text-sm">
-              <p className="font-semibold text-foreground">
-                Premium Plan Drafts
-              </p>
-              <p className="text-xs text-muted-foreground">
-                2 athletes awaiting individualized load adjustments.
-              </p>
-            </div>
-            <div className="rounded-2xl border border-border bg-secondary/40 p-4 text-sm">
-              <p className="font-semibold text-foreground">
-                Exercise Library
-              </p>
-              <p className="text-xs text-muted-foreground">
-                4 new uploads need metadata.
-              </p>
-            </div>
+            {programOpsData.length ? (
+              programOpsData.map((item) => (
+                <div key={item.title} className="rounded-2xl border border-border bg-secondary/40 p-4 text-sm">
+                  <p className="font-semibold text-foreground">{item.title}</p>
+                  <p className="text-xs text-muted-foreground">{item.detail}</p>
+                </div>
+              ))
+            ) : (
+              <EmptyState title="No program updates yet" description="Templates and library updates will appear here." />
+            )}
           </CardContent>
         </Card>
       </section>
@@ -596,17 +537,25 @@ export default function Home() {
       />
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {highlights.map((item) => (
-          <Card key={item.label} className="hover:border-primary/40">
-            <CardHeader>
-              <CardDescription>{item.label}</CardDescription>
-              <CardTitle className="text-3xl">{item.value}</CardTitle>
-            </CardHeader>
+        {highlightsData.length ? (
+          highlightsData.map((item) => (
+            <Card key={item.label} className="hover:border-primary/40">
+              <CardHeader>
+                <CardDescription>{item.label}</CardDescription>
+                <CardTitle className="text-3xl">{item.value}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-xs text-muted-foreground">{item.detail}</p>
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+          <Card className="col-span-full">
             <CardContent>
-              <p className="text-xs text-muted-foreground">{item.detail}</p>
+              <EmptyState title="No highlights yet" description="Weekly highlights will appear once activity is logged." />
             </CardContent>
           </Card>
-        ))}
+        )}
       </section>
 
       <ActionDialogs active={activeDialog} onClose={() => setActiveDialog(null)} />

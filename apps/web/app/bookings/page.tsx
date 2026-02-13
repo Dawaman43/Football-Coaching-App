@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import { AdminShell } from "../../components/admin/shell";
 import { SectionHeader } from "../../components/admin/section-header";
@@ -10,6 +10,7 @@ import { BookingsDialogs, type BookingsDialog } from "../../components/admin/boo
 import { BookingsFilters } from "../../components/admin/bookings/bookings-filters";
 import { BookingsList } from "../../components/admin/bookings/bookings-list";
 import { AvailabilityPanel } from "../../components/admin/bookings/availability-panel";
+import { useGetBookingsQuery, useGetServicesQuery } from "../../lib/apiSlice";
 
 type BookingItem = {
   name: string;
@@ -29,55 +30,34 @@ type ServiceType = {
 };
 
 export default function BookingsPage() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [bookings, setBookings] = useState<BookingItem[]>([]);
-  const [services, setServices] = useState<ServiceType[]>([]);
   const [activeDialog, setActiveDialog] = useState<BookingsDialog>(null);
   const [selectedBooking, setSelectedBooking] = useState<BookingItem | null>(null);
   const [activeChip, setActiveChip] = useState<string>("All");
   const chips = ["All", "Video", "In-person", "Group", "Premium"];
+  const { data: bookingsData, isLoading: bookingsLoading, refetch: refetchBookings } = useGetBookingsQuery();
+  const { data: servicesData, isLoading: servicesLoading } = useGetServicesQuery();
+  const isLoading = bookingsLoading || servicesLoading;
 
-  useEffect(() => {
-    let mounted = true;
-    async function load() {
-      setIsLoading(true);
-      try {
-        const [bookingsRes, servicesRes] = await Promise.all([
-          fetch("/api/backend/admin/bookings"),
-          fetch("/api/backend/bookings/services"),
-        ]);
+  const bookings = useMemo<BookingItem[]>(() => {
+    const items = bookingsData?.bookings ?? [];
+    return items.map((item: any) => ({
+      name: item.serviceName ?? item.type ?? "Session",
+      athlete: item.athleteName ?? "Unknown athlete",
+      time: item.startsAt
+        ? new Date(item.startsAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+        : "--",
+      type: item.type ?? "Session",
+    }));
+  }, [bookingsData]);
 
-        if (bookingsRes.ok) {
-          const data = await bookingsRes.json();
-          const mapped = (data.bookings ?? []).map((item: any) => ({
-            name: item.serviceName ?? item.type ?? "Session",
-            athlete: item.athleteName ?? "Unknown athlete",
-            time: item.startsAt ? new Date(item.startsAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "--",
-            type: item.type ?? "Session",
-          }));
-          if (mounted) setBookings(mapped);
-        }
-
-        if (servicesRes.ok) {
-          const data = await servicesRes.json();
-          if (mounted) setServices(data.items ?? []);
-        }
-      } finally {
-        if (mounted) setIsLoading(false);
-      }
-    }
-    load();
-    return () => {
-      mounted = false;
-    };
-  }, []);
+  const services = useMemo<ServiceType[]>(() => servicesData?.items ?? [], [servicesData]);
 
   const filteredBookings = useMemo(() => {
     if (activeChip === "All") return bookings;
     if (activeChip === "Group") return bookings.filter((booking) => booking.name.includes("Group"));
     if (activeChip === "Premium") return bookings.filter((booking) => booking.name.includes("Role Model"));
     return bookings.filter((booking) => booking.type === activeChip);
-  }, [activeChip]);
+  }, [activeChip, bookings]);
 
   return (
     <AdminShell
@@ -135,22 +115,7 @@ export default function BookingsPage() {
         onClose={() => setActiveDialog(null)}
         selectedBooking={selectedBooking}
         services={services}
-        onRefresh={() => {
-          setIsLoading(true);
-          fetch("/api/backend/admin/bookings")
-            .then((res) => res.ok ? res.json() : null)
-            .then((data) => {
-              if (!data) return;
-              const mapped = (data.bookings ?? []).map((item: any) => ({
-                name: item.serviceName ?? item.type ?? "Session",
-                athlete: item.athleteName ?? "Unknown athlete",
-                time: item.startsAt ? new Date(item.startsAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "--",
-                type: item.type ?? "Session",
-              }));
-              setBookings(mapped);
-            })
-            .finally(() => setIsLoading(false));
-        }}
+        onRefresh={refetchBookings}
       />
     </AdminShell>
   );

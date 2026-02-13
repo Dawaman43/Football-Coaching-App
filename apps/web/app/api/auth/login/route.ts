@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
-const apiBase = process.env.API_BASE_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
+const rawBase = process.env.API_BASE_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
+const apiBase = rawBase.replace(/\/api\/?$/, "");
 
 export async function POST(req: Request) {
   const body = await req.json();
@@ -16,7 +17,7 @@ export async function POST(req: Request) {
   }
 
   const data = await res.json();
-  const accessToken = data.accessToken as string | undefined;
+  const accessToken = (data.accessToken as string | undefined) ?? (data.idToken as string | undefined);
   const refreshToken = data.refreshToken as string | undefined;
   const expiresIn = data.expiresIn as number | undefined;
 

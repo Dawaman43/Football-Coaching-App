@@ -5,6 +5,7 @@ RUN corepack enable
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/api/package.json apps/api/tsconfig.json apps/api/drizzle.config.ts ./apps/api/
+COPY apps/api/drizzle ./apps/api/drizzle
 
 RUN pnpm install --filter api...
 
@@ -22,6 +23,7 @@ COPY --from=base /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
 COPY --from=base /app/apps/api/package.json ./apps/api/package.json
 COPY --from=base /app/apps/api/dist ./apps/api/dist
 COPY --from=base /app/apps/api/drizzle.config.ts ./apps/api/drizzle.config.ts
+COPY --from=base /app/apps/api/drizzle ./apps/api/drizzle
 
 ENV NODE_ENV=production
 WORKDIR /app/apps/api

@@ -7,12 +7,16 @@ import {
   createExercise,
   createProgramTemplate,
   createSession,
+  getAdminProfile,
+  getDashboardMetrics,
   getUserOnboarding,
   listBookingsAdmin,
   listMessageThreadsAdmin,
   listThreadMessagesAdmin,
   sendMessageAdmin,
   listUsers,
+  updateAdminPreferences,
+  updateAdminProfile,
   updateAthleteProgramTier,
 } from "../services/admin.service";
 import { ProgramType, sessionType } from "../db/schema";
@@ -61,6 +65,23 @@ const sessionExerciseSchema = z.object({
   regressionNotes: z.string().optional(),
 });
 
+const adminProfileSchema = z.object({
+  name: z.string().min(1),
+  email: z.string().email(),
+  profilePicture: z.string().optional().nullable(),
+  title: z.string().optional().nullable(),
+  bio: z.string().optional().nullable(),
+});
+
+const adminPreferencesSchema = z.object({
+  timezone: z.string().min(1),
+  notificationSummary: z.string().min(1),
+  workStartHour: z.number().int().min(0).max(23),
+  workStartMinute: z.number().int().min(0).max(59),
+  workEndHour: z.number().int().min(0).max(23),
+  workEndMinute: z.number().int().min(0).max(59),
+});
+
 export async function listAllUsers(_req: Request, res: Response) {
   const users = await listUsers();
   return res.status(200).json({ users });
@@ -69,6 +90,32 @@ export async function listAllUsers(_req: Request, res: Response) {
 export async function getOnboarding(req: Request, res: Response) {
   const userId = z.coerce.number().int().min(1).parse(req.params.userId);
   const data = await getUserOnboarding(userId);
+  return res.status(200).json(data);
+}
+
+export async function getAdminProfileDetails(req: Request, res: Response) {
+  const data = await getAdminProfile(req.user!.id);
+  if (!data) {
+    return res.status(404).json({ error: "Admin profile not found" });
+  }
+  return res.status(200).json(data);
+}
+
+export async function updateAdminProfileDetails(req: Request, res: Response) {
+  const parsed = adminProfileSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: "Invalid request", details: parsed.error.flatten().fieldErrors });
+  }
+  const data = await updateAdminProfile(req.user!.id, parsed.data);
+  return res.status(200).json(data);
+}
+
+export async function updateAdminPreferencesDetails(req: Request, res: Response) {
+  const parsed = adminPreferencesSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: "Invalid request", details: parsed.error.flatten().fieldErrors });
+  }
+  const data = await updateAdminPreferences(req.user!.id, parsed.data);
   return res.status(200).json(data);
 }
 
@@ -160,4 +207,9 @@ export async function sendAdminMessage(req: Request, res: Response) {
   const body = z.object({ content: z.string().min(1) }).parse(req.body);
   const message = await sendMessageAdmin({ coachId: req.user!.id, userId, content: body.content });
   return res.status(201).json({ message });
+}
+
+export async function getDashboard(req: Request, res: Response) {
+  const data = await getDashboardMetrics(req.user!.id);
+  return res.status(200).json(data);
 }

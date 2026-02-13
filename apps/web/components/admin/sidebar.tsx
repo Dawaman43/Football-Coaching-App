@@ -29,6 +29,7 @@ import { Select } from "../ui/select";
 
 const navItems = [
   { label: "Overview", href: "/", icon: Home },
+  { label: "Parent Portal", href: "/parent", icon: UserRound },
   { label: "Users & Tiers", href: "/users", icon: UserRound },
   { label: "Messaging", href: "/messaging", badge: "9", icon: MessageCircle },
   { label: "Schedule", href: "/bookings", icon: CalendarDays },
@@ -153,7 +154,7 @@ export function AdminSidebar({ collapsed = false }: AdminSidebarProps) {
   return (
     <aside
       className={cn(
-        "hidden flex-col border-r border-border bg-card px-6 py-8 transition-all lg:flex",
+        "hidden flex-col border-r border-border bg-card px-6 py-8 transition-all lg:flex lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto",
         collapsed ? "w-20 px-3" : "w-72"
       )}
     >
